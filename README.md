@@ -1,5 +1,10 @@
 ![colophon logo](/docs/_src/logo.png)
 
+Agent + RAG framework for long-form writing.
+
+## Planning
+
+See the implementation plan: [`docs/implementation-plan.md`](docs/implementation-plan.md).
 Colophon is for researchers, analysts, and technical writers who need to turn source-heavy notes into coherent long-form drafts. It is designed for people who want transparent, citation-aware generation that combines an outline, bibliography, prompts, and a lightweight knowledge graph into a manuscript they can review and revise.
 
 ## What Colophon does
@@ -20,17 +25,6 @@ Colophon is for researchers, analysts, and technical writers who need to turn so
 - [Architecture](docs/architecture.rst)
 - [Roadmap](docs/roadmap.rst)
 - [References](docs/references.rst)
-
-
-
-Direct documentation file map:
-
-- `/Users/briankeegan/Documents/New project/docs/getting_started.rst`
-- `/Users/briankeegan/Documents/New project/docs/usage.rst`
-- `/Users/briankeegan/Documents/New project/docs/tutorial.rst`
-- `/Users/briankeegan/Documents/New project/docs/examples.rst`
-- `/Users/briankeegan/Documents/New project/docs/api.rst`
-- `/Users/briankeegan/Documents/New project/docs/references.rst`
 
 Ontology catalogs used by advanced workflows:
 
