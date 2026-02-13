@@ -255,7 +255,7 @@ Use the imported graph directly in manuscript generation:
      --report build/manuscript_from_notes_diagnostics.json
 
 Notes source formatting guide
-----------------------------
+-----------------------------
 
 Obsidian:
 
