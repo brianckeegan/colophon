@@ -1,0 +1,11 @@
+{
+  "llm": {
+    "provider": "copilot",
+    "model": "gpt-4o-mini",
+    "api_key_env": "GITHUB_TOKEN",
+    "api_base_url": "https://models.inference.ai.azure.com",
+    "temperature": 0.2,
+    "max_tokens": 256,
+    "system_prompt": "You are an evidence-grounded writing assistant for long-form manuscripts."
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "prompts": {
+    "claim_template": "Claim: {lead_entity} appears in {source_title} as evidence for {section_title_lower}.",
+    "figure_reference_template": "See Figure {figure_id} ({figure_caption}).",
+    "paragraph_template": "{claim_text}\nEvidence: {citations}\nVisuals: {figure_references}",
+    "empty_section_template": "Insufficient grounding evidence was retrieved for this section."
+  }
+}

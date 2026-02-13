@@ -1,0 +1,9 @@
+{
+  "provider": "openalex",
+  "api_base_url": "https://api.openalex.org",
+  "timeout_seconds": 20.0,
+  "per_seed_limit": 5,
+  "top_k": 8,
+  "min_score": 0.2,
+  "mailto": ""
+}

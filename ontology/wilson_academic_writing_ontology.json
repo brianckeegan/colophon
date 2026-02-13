@@ -1,0 +1,298 @@
+{
+  "id": "wilson_academic_writing_companion",
+  "name": "Wilson Academic Writing Companion Ontology",
+  "ontology_type": "writing_companion_ontology",
+  "schema_version": "1.0",
+  "version": "1.0",
+  "purpose": "Companion ontology for Colophon that encodes background prompts, assumptions, and validation checks derived from Jeffrey R. Wilson's academic writing guidance.",
+  "source": {
+    "author": "Jeffrey R. Wilson",
+    "work": "Academic Writing",
+    "note": "Summarized for multi-agent writing orchestration."
+  },
+  "compatibility": {
+    "mode": "alongside_functional_forms",
+    "functional_forms_catalog": "ontology/functional_forms.json",
+    "compatible_form_ids": [
+      "sequential_transformation",
+      "structured_comparison",
+      "constructive_system_building",
+      "layered_evidence",
+      "interpretive_domain"
+    ],
+    "form_crosswalk": {
+      "sequential_transformation": {
+        "question_elements": [
+          "central_problem"
+        ],
+        "method_elements": [
+          "sources_or_data_scope",
+          "mechanism_account"
+        ],
+        "implication_elements": [
+          "implications",
+          "limits"
+        ]
+      },
+      "structured_comparison": {
+        "question_elements": [
+          "comparison_question"
+        ],
+        "method_elements": [
+          "case_selection_logic",
+          "comparison_criteria"
+        ],
+        "implication_elements": [
+          "comparative_implications",
+          "limits"
+        ]
+      },
+      "constructive_system_building": {
+        "question_elements": [
+          "design_problem"
+        ],
+        "method_elements": [
+          "design_method",
+          "evaluation_protocol"
+        ],
+        "implication_elements": [
+          "deployment_implications",
+          "limits"
+        ]
+      },
+      "layered_evidence": {
+        "question_elements": [
+          "research_problem"
+        ],
+        "method_elements": [
+          "evidence_layers",
+          "triangulation_method"
+        ],
+        "implication_elements": [
+          "synthesis_implications",
+          "limits"
+        ]
+      },
+      "interpretive_domain": {
+        "question_elements": [
+          "interpretive_problem"
+        ],
+        "method_elements": [
+          "method",
+          "textual_evidence"
+        ],
+        "implication_elements": [
+          "implications",
+          "next_arenas"
+        ]
+      }
+    }
+  },
+  "background_prompts": {
+    "global": [
+      "Treat writing as thinking: each claim should advance inquiry rather than merely report facts.",
+      "Treat writing as process: prefer iterative drafting and revision over one-pass generation.",
+      "Treat writing as conversation: position claims in relation to sources, counterarguments, and scholarly stakes."
+    ],
+    "form_overrides": {
+      "sequential_transformation": [
+        "Name phase transitions explicitly and explain mechanisms rather than implying inevitability."
+      ],
+      "structured_comparison": [
+        "Keep comparison criteria stable across cases and avoid false equivalence."
+      ],
+      "constructive_system_building": [
+        "State the design problem, method constraints, and evaluation logic before asserting system value."
+      ],
+      "layered_evidence": [
+        "Use layered evidence and triangulation; avoid overstating claims from any single evidentiary mode."
+      ],
+      "interpretive_domain": [
+        "Anchor interpretation in close reading and terminology before extending to broader implications."
+      ]
+    },
+    "agents": {
+      "claim_author_agent": [
+        "Each claim should be answerable to a guiding question or problem.",
+        "Prefer specific, evidenced assertions over generic or teleological statements."
+      ],
+      "paragraph_agent": [
+        "Default paragraph logic is assertion then evidence then analysis.",
+        "Make the analytical warrant explicit; evidence should not be left uninterpreted."
+      ],
+      "outline_expander": [
+        "Ensure expanded outlines include question/problem, method, argument, implications, and limits.",
+        "When possible, distinguish question in the text from question in the scholarship."
+      ],
+      "paragraph_coordinator": [
+        "Flag paragraphs that rely on assertion without supporting evidence or analysis."
+      ],
+      "section_coordinator": [
+        "Ensure sections develop coherent argument arcs and preserve conceptual continuity.",
+        "Surface gaps in evidence coverage, method visibility, and rhetorical flow."
+      ],
+      "chapter_coordinator": [
+        "Ensure chapter structure supports the declared argument and method progression."
+      ],
+      "book_coordinator": [
+        "Ensure chapters accumulate into a unified argument with explicit stakes and scope limits."
+      ]
+    }
+  },
+  "assumptions": [
+    {
+      "id": "writing_is_thinking",
+      "statement": "Writing is a mode of inquiry where claims and structure are developed through drafting.",
+      "implications": [
+        "Prompts should favor argument development over summary-only behavior.",
+        "Coordinator loops should permit revision before declaring convergence."
+      ],
+      "validation_rule_ids": [
+        "prompt_argument_scaffolding",
+        "iterative_revision_process"
+      ]
+    },
+    {
+      "id": "question_problem_drives_argument",
+      "statement": "Good academic writing starts from a non-obvious, answerable question or problem.",
+      "implications": [
+        "Outlines should include explicit question/problem framing.",
+        "Claim generation should remain scoped to that framing."
+      ],
+      "validation_rule_ids": [
+        "question_problem_presence"
+      ]
+    },
+    {
+      "id": "evidence_requires_analysis",
+      "statement": "Evidence does not interpret itself and must be connected to claims via analysis.",
+      "implications": [
+        "Paragraphs should combine citation signals with interpretive warrants.",
+        "Soft validation should track evidence-analysis balance."
+      ],
+      "validation_rule_ids": [
+        "assertion_evidence_analysis_ratio",
+        "bibliography_grounding_density"
+      ]
+    },
+    {
+      "id": "method_must_be_visible",
+      "statement": "Readers must see how the argument was built from sources, methods, and reasoning steps.",
+      "implications": [
+        "Outlines should include method or evidence protocol sections.",
+        "Bibliography entries should contain enough abstract/text detail for retrieval and verification."
+      ],
+      "validation_rule_ids": [
+        "method_visibility",
+        "bibliography_grounding_density"
+      ]
+    },
+    {
+      "id": "argument_needs_stakes_and_limits",
+      "statement": "Academic arguments should state implications and limits, not only findings.",
+      "implications": [
+        "Outlines should include implication/limit-oriented sections.",
+        "Conclusions should clarify transferability and open questions."
+      ],
+      "validation_rule_ids": [
+        "implication_visibility"
+      ]
+    }
+  ],
+  "validations": {
+    "rules": [
+      {
+        "id": "question_problem_presence",
+        "severity": "warning",
+        "category": "structure",
+        "component": "outline",
+        "keywords": [
+          "question",
+          "problem",
+          "puzzle",
+          "dilemma"
+        ],
+        "fallback_element_ids": [
+          "central_problem",
+          "comparison_question",
+          "design_problem",
+          "research_problem",
+          "interpretive_problem"
+        ]
+      },
+      {
+        "id": "method_visibility",
+        "severity": "warning",
+        "category": "coverage",
+        "component": "outline",
+        "keywords": [
+          "method",
+          "methods",
+          "approach",
+          "evidence",
+          "data",
+          "protocol"
+        ]
+      },
+      {
+        "id": "implication_visibility",
+        "severity": "warning",
+        "category": "coverage",
+        "component": "outline",
+        "keywords": [
+          "implication",
+          "implications",
+          "conclusion",
+          "limits",
+          "stakes",
+          "discussion"
+        ]
+      },
+      {
+        "id": "bibliography_grounding_density",
+        "severity": "warning",
+        "category": "evidence",
+        "component": "bibliography",
+        "min_text_chars": 80,
+        "min_grounded_ratio": 0.6
+      },
+      {
+        "id": "assertion_evidence_analysis_ratio",
+        "severity": "warning",
+        "category": "rhetoric",
+        "component": "claims",
+        "min_ratio": 0.55,
+        "analysis_keywords": [
+          "because",
+          "therefore",
+          "suggests",
+          "indicates",
+          "implies",
+          "demonstrates",
+          "shows"
+        ]
+      },
+      {
+        "id": "prompt_argument_scaffolding",
+        "severity": "info",
+        "category": "structure",
+        "component": "prompts",
+        "required_prompt_keys": [
+          "claim_template",
+          "paragraph_template"
+        ],
+        "claim_template_placeholders": [
+          "{lead_entity}",
+          "{source_title}"
+        ]
+      },
+      {
+        "id": "iterative_revision_process",
+        "severity": "info",
+        "category": "coherence",
+        "component": "agents",
+        "min_iterations_if_enabled": 2
+      }
+    ]
+  }
+}

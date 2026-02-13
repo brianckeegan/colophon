@@ -1,0 +1,28 @@
+{
+  "sources": [
+    {
+      "id": "src-01",
+      "title": "Knowledge Graphs for Scholarly Writing",
+      "authors": ["A. Researcher"],
+      "year": 2022,
+      "publication": "Journal of Graph Studies",
+      "abstract": "Knowledge graphs provide explicit structure for entities and relations in scientific narratives. They support disambiguation and reasoning across claims."
+    },
+    {
+      "id": "src-02",
+      "title": "Retrieval-Augmented Generation in Practice",
+      "authors": ["B. Engineer"],
+      "year": 2023,
+      "publication": "AI Systems Journal",
+      "abstract": "Retrieval-augmented generation grounds LLM outputs in external evidence. Robust chunking and ranking are key to citation quality."
+    },
+    {
+      "id": "src-03",
+      "title": "Cooperative Agent Workflows",
+      "authors": ["C. Architect"],
+      "year": 2024,
+      "publication": "Agent Systems Review",
+      "abstract": "Multi-agent systems can separate drafting, critique, and revision duties. This decomposition improves controllability for long-form generation."
+    }
+  ]
+}

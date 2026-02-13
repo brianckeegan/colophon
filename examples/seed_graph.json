@@ -1,0 +1,42 @@
+{
+  "entities": [
+    "Knowledge Graph",
+    "Retrieval-Augmented Generation",
+    "Claim",
+    "Citation",
+    "Multi-agent System"
+  ],
+  "relations": [
+    {
+      "source": "Knowledge Graph",
+      "predicate": "supports",
+      "target": "Claim"
+    },
+    {
+      "source": "Retrieval-Augmented Generation",
+      "predicate": "improves",
+      "target": "Citation"
+    },
+    {
+      "source": "Multi-agent System",
+      "predicate": "organizes",
+      "target": "Claim"
+    }
+  ],
+  "figures": [
+    {
+      "id": "fig-kg-overview",
+      "caption": "Knowledge graph schema overview",
+      "uri": "figures/kg-overview.png",
+      "alt_text": "Entity-relation schema showing claim and citation links.",
+      "related_entities": ["Knowledge Graph", "Claim"]
+    },
+    {
+      "id": "fig-agent-loop",
+      "caption": "Agent drafting and review loop",
+      "uri": "figures/agent-loop.png",
+      "alt_text": "Claim drafting, paragraph synthesis, and review cycle.",
+      "related_entities": ["Multi-agent System", "Citation"]
+    }
+  ]
+}

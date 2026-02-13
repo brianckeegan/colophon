@@ -1,0 +1,2442 @@
+{
+  "id": "colophon_functional_forms_catalog",
+  "name": "Colophon Functional Forms Catalog",
+  "ontology_type": "functional_forms_catalog",
+  "schema_version": "1.1",
+  "validation_rule_schema": {
+    "id": "string",
+    "severity": "error | soft_error | warning | info",
+    "category": "structure | coverage | evidence | logic | rhetoric | citation | scope | coherence",
+    "definitions": {
+      "what_it_detects": "10-20 word description",
+      "why_it_matters": "10-20 word description",
+      "common_signals": [
+        "10-20 word description"
+      ]
+    },
+    "test": {
+      "inputs": [
+        "outline",
+        "chapter_text",
+        "section_text",
+        "claim_ledger",
+        "evidence_graph",
+        "reference_catalog",
+        "run_manifest"
+      ],
+      "method": "static_check | heuristic_nlp | llm_judge | hybrid",
+      "steps": [
+        "string"
+      ],
+      "outputs": {
+        "pass": "boolean",
+        "score_0_1": "number",
+        "findings": [
+          {
+            "classification": "string",
+            "span_hint": "chapter_id/section_id/claim_id or approximate excerpt locator",
+            "message": "string",
+            "suggested_fix": "string"
+          }
+        ]
+      }
+    }
+  },
+  "functional_forms": [
+    {
+      "id": "sequential_transformation",
+      "name": "Sequential Transformation Form",
+      "purpose": "Explain change over time by tracing phases, documenting evidence, inferring mechanisms, then synthesizing.",
+      "core_ontology": [
+        {
+          "role": "problem_frame",
+          "label": "Problem",
+          "definition": "Defines the central question, stakes, boundaries, and why the transformation requires explanation."
+        },
+        {
+          "role": "phase_block",
+          "label": "Phases",
+          "definition": "Organizes the narrative into periods or stages, each with distinct conditions and dynamics."
+        },
+        {
+          "role": "mechanism_analysis",
+          "label": "Mechanisms",
+          "definition": "Specifies causal or interpretive processes linking phase conditions to observed transitions and outcomes."
+        },
+        {
+          "role": "integrative_synthesis",
+          "label": "Synthesis",
+          "definition": "Aggregates across phases, extracts recurring patterns, evaluates alternatives, and states scope limits."
+        }
+      ],
+      "chapter_pattern": [
+        {
+          "type": "introduction",
+          "required_sections": [
+            "central_problem",
+            "periodization_or_process_bounds",
+            "sources_or_data_scope",
+            "thesis_claim"
+          ]
+        },
+        {
+          "type": "phase_chapter",
+          "repeatable": true,
+          "required_sections": [
+            "phase_context",
+            "evidence_archive",
+            "mechanism_account",
+            "transition_claim"
+          ]
+        },
+        {
+          "type": "synthesis_chapter",
+          "required_sections": [
+            "cross_phase_patterns",
+            "rival_accounts",
+            "scope_conditions",
+            "implications"
+          ]
+        },
+        {
+          "type": "conclusion",
+          "required_sections": [
+            "restated_thesis",
+            "second_target_application",
+            "limits"
+          ]
+        }
+      ],
+      "elements": [
+        {
+          "id": "central_problem",
+          "label": "Central Problem",
+          "definition": "States the book\u2019s motivating puzzle and the empirical phenomenon requiring explanation and interpretation."
+        },
+        {
+          "id": "periodization_or_process_bounds",
+          "label": "Periodization Or Process Bounds",
+          "definition": "Defines start and end points, phase boundaries, and rationale for those temporal divisions."
+        },
+        {
+          "id": "sources_or_data_scope",
+          "label": "Sources Or Data Scope",
+          "definition": "Lists archives, datasets, or texts used, including inclusions, exclusions, and access constraints."
+        },
+        {
+          "id": "thesis_claim",
+          "label": "Thesis Claim",
+          "definition": "States the main argument early, including mechanism language and explicit limits of generalization."
+        },
+        {
+          "id": "phase_context",
+          "label": "Phase Context",
+          "definition": "Describes phase conditions, key actors, institutions, and baseline constraints shaping what becomes possible."
+        },
+        {
+          "id": "evidence_archive",
+          "label": "Evidence Archive",
+          "definition": "Presents primary evidence supporting phase description, with citations tied to specific chapter claims."
+        },
+        {
+          "id": "mechanism_account",
+          "label": "Mechanism Account",
+          "definition": "Explains how forces in this phase produce observed shifts, using explicit causal or interpretive steps."
+        },
+        {
+          "id": "transition_claim",
+          "label": "Transition Claim",
+          "definition": "Names the turning point and why it reconfigures the system, setting up the next chapter."
+        },
+        {
+          "id": "cross_phase_patterns",
+          "label": "Cross Phase Patterns",
+          "definition": "Compares phases to identify recurring structures, persistent constraints, and repeated rhetorical or institutional moves."
+        },
+        {
+          "id": "rival_accounts",
+          "label": "Rival Accounts",
+          "definition": "Summarizes plausible alternative explanations and evaluates them against the assembled evidence."
+        },
+        {
+          "id": "scope_conditions",
+          "label": "Scope Conditions",
+          "definition": "Specifies where the argument applies, where it fails, and which contextual factors matter most."
+        },
+        {
+          "id": "implications",
+          "label": "Implications",
+          "definition": "Draws out theoretical or practical consequences tied directly to the demonstrated transformation and mechanisms."
+        },
+        {
+          "id": "restated_thesis",
+          "label": "Restated Thesis",
+          "definition": "Reasserts the thesis in light of evidence, emphasizing the strongest supported mechanisms and patterns."
+        },
+        {
+          "id": "second_target_application",
+          "label": "Second Target Application",
+          "definition": "Applies the thesis to a new domain, debate, or case to show transfer under stated limits."
+        },
+        {
+          "id": "limits",
+          "label": "Limits",
+          "definition": "Records remaining uncertainties, evidence gaps, and which claims remain provisional after synthesis."
+        }
+      ],
+      "validation": {
+        "required_checks": [
+          "st_phase_template_isomorphism",
+          "st_missing_turning_point_claim",
+          "st_phase_evidence_gap",
+          "st_post_hoc_teleology_detector",
+          "st_mechanism_leap_fallacy",
+          "st_synthesis_selective_aggregation"
+        ],
+        "rules": [
+          {
+            "id": "st_phase_template_isomorphism",
+            "severity": "error",
+            "category": "structure",
+            "definitions": {
+              "what_it_detects": "Phase chapters missing required sections or using inconsistent internal ordering across phases.",
+              "why_it_matters": "Template drift weakens comparability and obscures where change occurs in the narrative.",
+              "common_signals": [
+                "Missing transition section at end of phase chapter.",
+                "New section headings appear in only one phase."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "outline",
+                "chapter_text"
+              ],
+              "method": "static_check",
+              "steps": [
+                "Extract required_sections for phase_chapter from outline.",
+                "Parse each phase chapter for section header matches.",
+                "Compute coverage and order similarity across phase chapters."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          },
+          {
+            "id": "st_missing_turning_point_claim",
+            "severity": "error",
+            "category": "logic",
+            "definitions": {
+              "what_it_detects": "Phase chapters lacking an explicit turning-point claim connecting to the next phase.",
+              "why_it_matters": "Without turning points, time becomes description and mechanism claims lose traction.",
+              "common_signals": [
+                "Chapter ends without forward linkage to next chapter.",
+                "Transitions rely on vague inevitability or unspecified causes."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "chapter_text",
+                "claim_ledger"
+              ],
+              "method": "hybrid",
+              "steps": [
+                "Locate transition_claim section or last 10% of chapter.",
+                "Check for at least one claim tagged transition with next_phase reference.",
+                "Heuristically detect causal connector phrases tied to named events or decisions."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          },
+          {
+            "id": "st_phase_evidence_gap",
+            "severity": "soft_error",
+            "category": "evidence",
+            "definitions": {
+              "what_it_detects": "Key mechanism or transition claims with insufficient linked evidence items for the phase.",
+              "why_it_matters": "Unlinked claims invite narrative overreach and undermine auditability of phase explanations.",
+              "common_signals": [
+                "Mechanism claim cites no sources or cites only general background texts.",
+                "Multiple strong claims share the same single citation without justification."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "claim_ledger",
+                "evidence_graph",
+                "reference_catalog"
+              ],
+              "method": "static_check",
+              "steps": [
+                "Identify claims tagged mechanism or transition in each phase.",
+                "Count evidence links per claim and relationship types.",
+                "Flag claims under minimum thresholds or with repeated single-source dependence."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          },
+          {
+            "id": "st_post_hoc_teleology_detector",
+            "severity": "soft_error",
+            "category": "rhetoric",
+            "definitions": {
+              "what_it_detects": "Teleological narration treating outcomes as inevitable rather than contingent and argued.",
+              "why_it_matters": "Teleology substitutes narrative momentum for explanation and weakens causal inference.",
+              "common_signals": [
+                "Frequent inevitability terms without mechanisms or evidence.",
+                "Transitions framed as 'bound to happen' without decision points."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "chapter_text",
+                "section_text",
+                "claim_ledger"
+              ],
+              "method": "heuristic_nlp",
+              "steps": [
+                "Scan for inevitability lexicon density by chapter and transition sections.",
+                "Check whether surrounding text includes named mechanisms and cited evidence.",
+                "Classify findings as mild, moderate, severe teleology risk."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          },
+          {
+            "id": "st_mechanism_leap_fallacy",
+            "severity": "soft_error",
+            "category": "logic",
+            "definitions": {
+              "what_it_detects": "Jumps from description to causal conclusion without inference steps or counterevidence handling.",
+              "why_it_matters": "Mechanism leaps create persuasive prose without defensible reasoning or traceable warrants.",
+              "common_signals": [
+                "Causal verbs appear after descriptive sections with no linking argument.",
+                "No discussion of alternative explanations for the same transition."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "section_text",
+                "claim_ledger",
+                "evidence_graph"
+              ],
+              "method": "llm_judge",
+              "steps": [
+                "Identify descriptive-to-mechanism boundary within section.",
+                "Ask judge to locate missing inference steps or warrants.",
+                "Return classification: warrant_missing, alternative_missing, confound_ignored."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          },
+          {
+            "id": "st_synthesis_selective_aggregation",
+            "severity": "soft_error",
+            "category": "coverage",
+            "definitions": {
+              "what_it_detects": "Synthesis omits phases or underweights contradictory phase evidence without explicit discussion.",
+              "why_it_matters": "Selective aggregation produces clean narrative while hiding variance essential to the thesis.",
+              "common_signals": [
+                "Synthesis references only early or late phases repeatedly.",
+                "Contradictory evidence vanishes between phase chapters and synthesis."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "chapter_text",
+                "outline",
+                "claim_ledger"
+              ],
+              "method": "hybrid",
+              "steps": [
+                "Enumerate all phases and their key claim_ids.",
+                "Measure phase mention coverage in synthesis chapter text.",
+                "Detect disappearance of flagged contradictory claims from synthesis discussion."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          }
+        ]
+      },
+      "coordination_ontology": {
+        "paragraph": {
+          "quality_targets": [
+            "phase-specific readability",
+            "authoritative evidence framing",
+            "persuasive mechanism signaling",
+            "explicit citation anchoring"
+          ],
+          "require_citation_markers": true,
+          "min_words": 12,
+          "concise_suffix": " This supports the phase argument with concise evidence."
+        },
+        "section": {
+          "quality_targets": [
+            "phase coherence",
+            "explicit mechanism linkage",
+            "clear transition readiness",
+            "citation-complete argument flow"
+          ]
+        },
+        "chapter": {
+          "quality_targets": [
+            "section ordering matches outline intent",
+            "internal conceptual continuity",
+            "chapter-scope discipline"
+          ]
+        },
+        "book": {
+          "quality_targets": [
+            "chapter-to-chapter narrative continuity",
+            "cumulative argument development",
+            "global scope consistency"
+          ]
+        }
+      },
+      "outline_expansion": {
+        "chapter_goal_templates": {
+          "introduction": "Advance {chapter_title} as a 'introduction' chapter in the Sequential Transformation Form form with evidence-backed section cohesion.",
+          "phase_chapter": "Advance {chapter_title} as a 'phase_chapter' chapter in the Sequential Transformation Form form with evidence-backed section cohesion.",
+          "synthesis_chapter": "Advance {chapter_title} as a 'synthesis_chapter' chapter in the Sequential Transformation Form form with evidence-backed section cohesion.",
+          "conclusion": "Advance {chapter_title} as a 'conclusion' chapter in the Sequential Transformation Form form with evidence-backed section cohesion."
+        },
+        "section_objective_templates": {
+          "central_problem": "Frame '{section_title}' in '{chapter_title}' by defining the motivating puzzle, stakes, and analytic boundaries.",
+          "periodization_or_process_bounds": "Define temporal or process bounds for '{section_title}' in '{chapter_title}', including rationale for phase boundaries.",
+          "sources_or_data_scope": "Specify source scope for '{section_title}' in '{chapter_title}', including inclusion/exclusion and access constraints.",
+          "thesis_claim": "State the chapter-level thesis in '{section_title}' for '{chapter_title}' with mechanism language and scope limits.",
+          "phase_context": "Describe phase conditions for '{section_title}' in '{chapter_title}' and connect actors, institutions, and constraints.",
+          "evidence_archive": "Assemble evidence in '{section_title}' for '{chapter_title}' and tie citations to explicit claims.",
+          "mechanism_account": "Explain mechanism steps in '{section_title}' for '{chapter_title}', including causal or interpretive warrants.",
+          "transition_claim": "Conclude '{section_title}' in '{chapter_title}' with a transition claim that sets up the next phase.",
+          "cross_phase_patterns": "Compare phases in '{section_title}' for '{chapter_title}' to identify recurring patterns and constraints.",
+          "rival_accounts": "Evaluate rival accounts in '{section_title}' for '{chapter_title}' against assembled evidence.",
+          "scope_conditions": "Specify scope conditions in '{section_title}' for '{chapter_title}', including failure cases.",
+          "implications": "Derive implications in '{section_title}' for '{chapter_title}' tied directly to supported mechanisms.",
+          "restated_thesis": "Restate the thesis in '{section_title}' for '{chapter_title}' using the strongest supported mechanisms.",
+          "second_target_application": "Apply the thesis in '{section_title}' for '{chapter_title}' to a second domain under stated limits.",
+          "limits": "Document unresolved limits in '{section_title}' for '{chapter_title}' and identify priority evidence gaps."
+        },
+        "subsection_templates": {
+          "central_problem": [
+            "Puzzle and Stakes",
+            "Boundary Conditions",
+            "Research Question"
+          ],
+          "periodization_or_process_bounds": [
+            "Boundary Criteria",
+            "Temporal Markers",
+            "Phase Definitions"
+          ],
+          "sources_or_data_scope": [
+            "Included Sources",
+            "Exclusions",
+            "Data Limitations"
+          ],
+          "thesis_claim": [
+            "Core Claim",
+            "Mechanism Preview",
+            "Scope Conditions"
+          ],
+          "phase_context": [
+            "Actors and Institutions",
+            "Baseline Constraints",
+            "Contextual Pressures"
+          ],
+          "evidence_archive": [
+            "Primary Evidence",
+            "Citation Coverage",
+            "Evidence Gaps"
+          ],
+          "mechanism_account": [
+            "Mechanism Steps",
+            "Counterfactual Checks",
+            "Warranted Inference"
+          ],
+          "transition_claim": [
+            "Turning Point",
+            "Transition Drivers",
+            "Next-Phase Setup"
+          ],
+          "cross_phase_patterns": [
+            "Recurring Structures",
+            "Contrasts",
+            "Pattern Summary"
+          ],
+          "rival_accounts": [
+            "Alternative Explanations",
+            "Comparative Fit",
+            "Residual Uncertainty"
+          ],
+          "scope_conditions": [
+            "Where the Claim Holds",
+            "Boundary Failures",
+            "Sensitivity Factors"
+          ],
+          "implications": [
+            "Theoretical Implications",
+            "Practical Implications",
+            "Future Decisions"
+          ],
+          "restated_thesis": [
+            "Thesis Restatement",
+            "Strongest Evidence",
+            "Remaining Uncertainty"
+          ],
+          "second_target_application": [
+            "Transfer Target",
+            "Adaptation Steps",
+            "Comparative Outcome"
+          ],
+          "limits": [
+            "Known Limits",
+            "Data Constraints",
+            "Open Questions"
+          ]
+        },
+        "prompt_hints": {
+          "section_planning_template": "Use the section objective and subsection plan to draft claims with explicit citations and figure references.",
+          "synthesis_template": "Synthesize the strongest claims into a transition that prepares the next section and chapter hand-off."
+        }
+      }
+    },
+    {
+      "id": "structured_comparison",
+      "name": "Structured Comparison Form",
+      "purpose": "Enable inference via controlled variation across cases using shared templates and cross-case synthesis.",
+      "core_ontology": [
+        {
+          "role": "comparison_frame",
+          "label": "Framework",
+          "definition": "Defines constructs, dimensions, and expected mechanisms used consistently across all cases examined."
+        },
+        {
+          "role": "case_instance",
+          "label": "Cases",
+          "definition": "Instantiates the framework in bounded settings, producing comparable evidence and within-case inferences."
+        },
+        {
+          "role": "cross_case_inference",
+          "label": "Cross-Case Inference",
+          "definition": "Aggregates similarities and differences to refine theory, test rivals, and specify scope conditions."
+        }
+      ],
+      "chapter_pattern": [
+        {
+          "type": "introduction",
+          "required_sections": [
+            "comparison_question",
+            "case_selection_logic",
+            "criteria_or_dimensions",
+            "thesis_or_expectations"
+          ]
+        },
+        {
+          "type": "framework_chapter",
+          "required_sections": [
+            "construct_definitions",
+            "expected_mechanisms",
+            "measurement_or_operationalization"
+          ]
+        },
+        {
+          "type": "case_chapter",
+          "repeatable": true,
+          "required_sections": [
+            "case_context",
+            "mechanism_trace",
+            "outcomes",
+            "within_case_inference"
+          ]
+        },
+        {
+          "type": "cross_case_chapter",
+          "required_sections": [
+            "patterned_differences",
+            "rival_explanations",
+            "updated_theory_or_typology",
+            "scope_conditions"
+          ]
+        },
+        {
+          "type": "conclusion",
+          "required_sections": [
+            "restated_inference",
+            "generalization_limits",
+            "implications"
+          ]
+        }
+      ],
+      "validation": {
+        "required_checks": [
+          "sc_case_schema_isomorphism",
+          "sc_unbalanced_evidence_weighting",
+          "sc_false_equivalence_detector",
+          "sc_cherry_pick_patterning"
+        ],
+        "rules": [
+          {
+            "id": "sc_case_schema_isomorphism",
+            "severity": "error",
+            "category": "structure",
+            "definitions": {
+              "what_it_detects": "Case chapters not conforming to shared template or missing comparable analytic dimensions.",
+              "why_it_matters": "Broken isomorphism blocks cross-case inference and invites impressionistic comparisons.",
+              "common_signals": [
+                "One case lacks outcomes section or mechanism trace.",
+                "Dimensions appear in some cases but not all."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "outline",
+                "chapter_text"
+              ],
+              "method": "static_check",
+              "steps": [
+                "Extract required_sections for case_chapter from outline.",
+                "Parse each case chapter for required section coverage.",
+                "Report missing sections and dimension gaps by case_id."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          },
+          {
+            "id": "sc_unbalanced_evidence_weighting",
+            "severity": "soft_error",
+            "category": "evidence",
+            "definitions": {
+              "what_it_detects": "Cases show large disparities in evidence quantity, diversity, or primary-source grounding.",
+              "why_it_matters": "Unequal evidentiary footing turns comparison into asymmetrical advocacy for favored cases.",
+              "common_signals": [
+                "One case has many primary sources while another relies on summaries.",
+                "Mechanism claims lack diverse supports or contradict links."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "evidence_graph",
+                "claim_ledger"
+              ],
+              "method": "static_check",
+              "steps": [
+                "Compute evidence counts and relation diversity per case chapter.",
+                "Normalize by chapter length and claim counts.",
+                "Flag cases outside variance thresholds and classify imbalance type."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          },
+          {
+            "id": "sc_false_equivalence_detector",
+            "severity": "soft_error",
+            "category": "logic",
+            "definitions": {
+              "what_it_detects": "Comparisons treat non-commensurate entities as equivalent without normalization or warrants.",
+              "why_it_matters": "False equivalence yields misleading symmetry and corrupts inferred differences and causes.",
+              "common_signals": [
+                "Outcomes compared without baseline adjustment or scale normalization.",
+                "Same label applied to distinct institutional forms."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "cross_case_chapter",
+                "framework_chapter",
+                "claim_ledger"
+              ],
+              "method": "llm_judge",
+              "steps": [
+                "Extract explicit comparison claims from cross-case chapter.",
+                "Check for commensurability warrants and normalization statements.",
+                "Classify: commensurability_missing, baseline_mismatch, label_drift."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          },
+          {
+            "id": "sc_cherry_pick_patterning",
+            "severity": "soft_error",
+            "category": "rhetoric",
+            "definitions": {
+              "what_it_detects": "Cross-case synthesis suppresses within-case ambiguity or omits contradictory evidence.",
+              "why_it_matters": "Cherry-picked patterning inflates confidence and hides uncertainty necessary for fair inference.",
+              "common_signals": [
+                "Caveats in case chapters disappear in cross-case chapter.",
+                "Contradictory evidence never appears in comparative claims."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "chapter_text",
+                "claim_ledger",
+                "evidence_graph"
+              ],
+              "method": "hybrid",
+              "steps": [
+                "Identify claims marked uncertain or contested within case chapters.",
+                "Check whether cross-case chapter references those contested items.",
+                "Classify omissions as ambiguity_suppressed or contradiction_ignored."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          }
+        ]
+      },
+      "elements": [
+        {
+          "id": "comparison_question",
+          "label": "Comparison Question",
+          "definition": "Defines 'Comparison Question' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "case_selection_logic",
+          "label": "Case Selection Logic",
+          "definition": "Defines 'Case Selection Logic' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "criteria_or_dimensions",
+          "label": "Criteria Or Dimensions",
+          "definition": "Defines 'Criteria Or Dimensions' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "thesis_or_expectations",
+          "label": "Thesis Or Expectations",
+          "definition": "Defines 'Thesis Or Expectations' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "construct_definitions",
+          "label": "Construct Definitions",
+          "definition": "Defines 'Construct Definitions' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "expected_mechanisms",
+          "label": "Expected Mechanisms",
+          "definition": "Defines 'Expected Mechanisms' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "measurement_or_operationalization",
+          "label": "Measurement Or Operationalization",
+          "definition": "Defines 'Measurement Or Operationalization' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "case_context",
+          "label": "Case Context",
+          "definition": "Defines 'Case Context' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "mechanism_trace",
+          "label": "Mechanism Trace",
+          "definition": "Defines 'Mechanism Trace' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "outcomes",
+          "label": "Outcomes",
+          "definition": "Defines 'Outcomes' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "within_case_inference",
+          "label": "Within Case Inference",
+          "definition": "Defines 'Within Case Inference' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "patterned_differences",
+          "label": "Patterned Differences",
+          "definition": "Defines 'Patterned Differences' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "rival_explanations",
+          "label": "Rival Explanations",
+          "definition": "Defines 'Rival Explanations' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "updated_theory_or_typology",
+          "label": "Updated Theory Or Typology",
+          "definition": "Defines 'Updated Theory Or Typology' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "scope_conditions",
+          "label": "Scope Conditions",
+          "definition": "Defines 'Scope Conditions' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "restated_inference",
+          "label": "Restated Inference",
+          "definition": "Defines 'Restated Inference' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "generalization_limits",
+          "label": "Generalization Limits",
+          "definition": "Defines 'Generalization Limits' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "implications",
+          "label": "Implications",
+          "definition": "Defines 'Implications' as a required element in the Structured Comparison Form chapter pattern for coordinated drafting and review."
+        }
+      ],
+      "coordination_ontology": {
+        "paragraph": {
+          "quality_targets": [
+            "readability",
+            "authoritative tone",
+            "persuasive flow",
+            "explicit evidence grounding"
+          ],
+          "require_citation_markers": true,
+          "min_words": 12,
+          "concise_suffix": " This supports the section's argument with concise evidence."
+        },
+        "section": {
+          "quality_targets": [
+            "paragraph-to-objective coherence",
+            "clear claim progression",
+            "evidence-to-claim traceability",
+            "transition-ready closing"
+          ]
+        },
+        "chapter": {
+          "quality_targets": [
+            "section ordering matches outline intent",
+            "internal conceptual continuity",
+            "chapter-scope discipline"
+          ]
+        },
+        "book": {
+          "quality_targets": [
+            "chapter-to-chapter narrative continuity",
+            "cumulative argument development",
+            "global scope consistency"
+          ]
+        }
+      },
+      "outline_expansion": {
+        "chapter_goal_templates": {
+          "introduction": "Advance {chapter_title} as a 'introduction' chapter in the Structured Comparison Form form with evidence-backed section cohesion.",
+          "framework_chapter": "Advance {chapter_title} as a 'framework_chapter' chapter in the Structured Comparison Form form with evidence-backed section cohesion.",
+          "case_chapter": "Advance {chapter_title} as a 'case_chapter' chapter in the Structured Comparison Form form with evidence-backed section cohesion.",
+          "cross_case_chapter": "Advance {chapter_title} as a 'cross_case_chapter' chapter in the Structured Comparison Form form with evidence-backed section cohesion.",
+          "conclusion": "Advance {chapter_title} as a 'conclusion' chapter in the Structured Comparison Form form with evidence-backed section cohesion."
+        },
+        "section_objective_templates": {
+          "comparison_question": "Develop '{section_title}' in '{chapter_title}' by addressing comparison question with explicit claims, citations, and transition logic.",
+          "case_selection_logic": "Develop '{section_title}' in '{chapter_title}' by addressing case selection logic with explicit claims, citations, and transition logic.",
+          "criteria_or_dimensions": "Develop '{section_title}' in '{chapter_title}' by addressing criteria or dimensions with explicit claims, citations, and transition logic.",
+          "thesis_or_expectations": "Develop '{section_title}' in '{chapter_title}' by addressing thesis or expectations with explicit claims, citations, and transition logic.",
+          "construct_definitions": "Develop '{section_title}' in '{chapter_title}' by addressing construct definitions with explicit claims, citations, and transition logic.",
+          "expected_mechanisms": "Develop '{section_title}' in '{chapter_title}' by addressing expected mechanisms with explicit claims, citations, and transition logic.",
+          "measurement_or_operationalization": "Develop '{section_title}' in '{chapter_title}' by addressing measurement or operationalization with explicit claims, citations, and transition logic.",
+          "case_context": "Develop '{section_title}' in '{chapter_title}' by addressing case context with explicit claims, citations, and transition logic.",
+          "mechanism_trace": "Develop '{section_title}' in '{chapter_title}' by addressing mechanism trace with explicit claims, citations, and transition logic.",
+          "outcomes": "Develop '{section_title}' in '{chapter_title}' by addressing outcomes with explicit claims, citations, and transition logic.",
+          "within_case_inference": "Develop '{section_title}' in '{chapter_title}' by addressing within case inference with explicit claims, citations, and transition logic.",
+          "patterned_differences": "Develop '{section_title}' in '{chapter_title}' by addressing patterned differences with explicit claims, citations, and transition logic.",
+          "rival_explanations": "Develop '{section_title}' in '{chapter_title}' by addressing rival explanations with explicit claims, citations, and transition logic.",
+          "updated_theory_or_typology": "Develop '{section_title}' in '{chapter_title}' by addressing updated theory or typology with explicit claims, citations, and transition logic.",
+          "scope_conditions": "Develop '{section_title}' in '{chapter_title}' by addressing scope conditions with explicit claims, citations, and transition logic.",
+          "restated_inference": "Develop '{section_title}' in '{chapter_title}' by addressing restated inference with explicit claims, citations, and transition logic.",
+          "generalization_limits": "Develop '{section_title}' in '{chapter_title}' by addressing generalization limits with explicit claims, citations, and transition logic.",
+          "implications": "Develop '{section_title}' in '{chapter_title}' by addressing implications with explicit claims, citations, and transition logic."
+        },
+        "subsection_templates": {
+          "comparison_question": [
+            "Define Comparison Question",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "case_selection_logic": [
+            "Define Case Selection Logic",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "criteria_or_dimensions": [
+            "Define Criteria Or Dimensions",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "thesis_or_expectations": [
+            "Define Thesis Or Expectations",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "construct_definitions": [
+            "Define Construct Definitions",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "expected_mechanisms": [
+            "Define Expected Mechanisms",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "measurement_or_operationalization": [
+            "Define Measurement Or Operationalization",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "case_context": [
+            "Define Case Context",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "mechanism_trace": [
+            "Define Mechanism Trace",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "outcomes": [
+            "Define Outcomes",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "within_case_inference": [
+            "Define Within Case Inference",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "patterned_differences": [
+            "Define Patterned Differences",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "rival_explanations": [
+            "Define Rival Explanations",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "updated_theory_or_typology": [
+            "Define Updated Theory Or Typology",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "scope_conditions": [
+            "Define Scope Conditions",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "restated_inference": [
+            "Define Restated Inference",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "generalization_limits": [
+            "Define Generalization Limits",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "implications": [
+            "Define Implications",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ]
+        },
+        "prompt_hints": {
+          "section_planning_template": "Use the section objective and subsection plan to draft claims with explicit citations and figure references.",
+          "synthesis_template": "Synthesize the strongest claims into a transition that prepares the next section and chapter hand-off."
+        }
+      }
+    },
+    {
+      "id": "constructive_system_building",
+      "name": "Constructive System-Building Form",
+      "purpose": "Build a conceptual or methodological system via diagnosis, construct modules, and integration.",
+      "core_ontology": [
+        {
+          "role": "diagnosis",
+          "label": "Diagnosis",
+          "definition": "Identifies failure modes in existing frameworks, motivating requirements for a new system."
+        },
+        {
+          "role": "construct_modules",
+          "label": "Construct Development",
+          "definition": "Introduces constructs with definitions, boundaries, examples, and objection handling for reuse."
+        },
+        {
+          "role": "system_integration",
+          "label": "Integration",
+          "definition": "Specifies construct interactions, formalizes the full system, and compares alternatives and trade-offs."
+        }
+      ],
+      "chapter_pattern": [
+        {
+          "type": "introduction",
+          "required_sections": [
+            "gap_diagnosis",
+            "thesis",
+            "key_terms_preview",
+            "evaluation_criteria"
+          ]
+        },
+        {
+          "type": "critique_chapter",
+          "repeatable": true,
+          "required_sections": [
+            "existing_approach_reconstruction",
+            "assumptions",
+            "failure_modes",
+            "design_requirements"
+          ]
+        },
+        {
+          "type": "construct_chapter",
+          "repeatable": true,
+          "required_sections": [
+            "definition",
+            "justification",
+            "boundaries",
+            "worked_example",
+            "counterarguments"
+          ]
+        },
+        {
+          "type": "integration_chapter",
+          "required_sections": [
+            "construct_interactions",
+            "full_system_spec",
+            "comparison_to_alternatives",
+            "tradeoffs"
+          ]
+        },
+        {
+          "type": "conclusion",
+          "required_sections": [
+            "system_claims",
+            "application_domains",
+            "scope_conditions"
+          ]
+        }
+      ],
+      "validation": {
+        "required_checks": [
+          "cs_synonym_drift_guard",
+          "cs_undefined_term_detector",
+          "cs_framework_overreach"
+        ],
+        "rules": [
+          {
+            "id": "cs_synonym_drift_guard",
+            "severity": "error",
+            "category": "coherence",
+            "definitions": {
+              "what_it_detects": "Construct names and meanings shift across chapters without explicit mappings or updates.",
+              "why_it_matters": "Integration fails when constructs lack stable identifiers and consistent definitions.",
+              "common_signals": [
+                "Construct renamed without mapping table.",
+                "Definitions contradict earlier boundary statements."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "claim_ledger",
+                "chapter_text"
+              ],
+              "method": "hybrid",
+              "steps": [
+                "Extract construct identifiers and canonical definitions.",
+                "Scan later chapters for renamed or redefined constructs.",
+                "Flag unmapped renames and definition deltas exceeding threshold."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          },
+          {
+            "id": "cs_undefined_term_detector",
+            "severity": "soft_error",
+            "category": "rhetoric",
+            "definitions": {
+              "what_it_detects": "Key terms used repeatedly without definition, boundary rules, or relation to constructs.",
+              "why_it_matters": "Undefined terms increase ambiguity and permit rhetorical substitution for analytic precision.",
+              "common_signals": [
+                "Novel jargon persists without definitional section.",
+                "Term acts as explanation without criteria or mechanism."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "chapter_text",
+                "outline",
+                "claim_ledger"
+              ],
+              "method": "heuristic_nlp",
+              "steps": [
+                "Extract frequent candidate technical terms per chapter.",
+                "Check for nearby definitional patterns or explicit boundary claims.",
+                "Classify: missing_definition, missing_boundary, missing_relation_mapping."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          },
+          {
+            "id": "cs_framework_overreach",
+            "severity": "soft_error",
+            "category": "scope",
+            "definitions": {
+              "what_it_detects": "Claims extend framework applicability beyond provided examples, evidence, or stated scope conditions.",
+              "why_it_matters": "Overreach reduces credibility and obscures where framework genuinely provides leverage.",
+              "common_signals": [
+                "Universal language without scope conditions.",
+                "Applications listed without worked examples or empirical contact."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "chapter_text",
+                "claim_ledger"
+              ],
+              "method": "llm_judge",
+              "steps": [
+                "Extract broad generalization claims from conclusion and integration chapters.",
+                "Check for supporting examples and stated scope conditions.",
+                "Classify: universality_claim, scope_missing, example_missing."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          }
+        ]
+      },
+      "elements": [
+        {
+          "id": "gap_diagnosis",
+          "label": "Gap Diagnosis",
+          "definition": "Defines 'Gap Diagnosis' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "thesis",
+          "label": "Thesis",
+          "definition": "Defines 'Thesis' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "key_terms_preview",
+          "label": "Key Terms Preview",
+          "definition": "Defines 'Key Terms Preview' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "evaluation_criteria",
+          "label": "Evaluation Criteria",
+          "definition": "Defines 'Evaluation Criteria' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "existing_approach_reconstruction",
+          "label": "Existing Approach Reconstruction",
+          "definition": "Defines 'Existing Approach Reconstruction' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "assumptions",
+          "label": "Assumptions",
+          "definition": "Defines 'Assumptions' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "failure_modes",
+          "label": "Failure Modes",
+          "definition": "Defines 'Failure Modes' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "design_requirements",
+          "label": "Design Requirements",
+          "definition": "Defines 'Design Requirements' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "definition",
+          "label": "Definition",
+          "definition": "Defines 'Definition' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "justification",
+          "label": "Justification",
+          "definition": "Defines 'Justification' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "boundaries",
+          "label": "Boundaries",
+          "definition": "Defines 'Boundaries' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "worked_example",
+          "label": "Worked Example",
+          "definition": "Defines 'Worked Example' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "counterarguments",
+          "label": "Counterarguments",
+          "definition": "Defines 'Counterarguments' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "construct_interactions",
+          "label": "Construct Interactions",
+          "definition": "Defines 'Construct Interactions' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "full_system_spec",
+          "label": "Full System Spec",
+          "definition": "Defines 'Full System Spec' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "comparison_to_alternatives",
+          "label": "Comparison To Alternatives",
+          "definition": "Defines 'Comparison To Alternatives' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "tradeoffs",
+          "label": "Tradeoffs",
+          "definition": "Defines 'Tradeoffs' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "system_claims",
+          "label": "System Claims",
+          "definition": "Defines 'System Claims' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "application_domains",
+          "label": "Application Domains",
+          "definition": "Defines 'Application Domains' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "scope_conditions",
+          "label": "Scope Conditions",
+          "definition": "Defines 'Scope Conditions' as a required element in the Constructive System-Building Form chapter pattern for coordinated drafting and review."
+        }
+      ],
+      "coordination_ontology": {
+        "paragraph": {
+          "quality_targets": [
+            "readability",
+            "authoritative tone",
+            "persuasive flow",
+            "explicit evidence grounding"
+          ],
+          "require_citation_markers": true,
+          "min_words": 12,
+          "concise_suffix": " This supports the section's argument with concise evidence."
+        },
+        "section": {
+          "quality_targets": [
+            "paragraph-to-objective coherence",
+            "clear claim progression",
+            "evidence-to-claim traceability",
+            "transition-ready closing"
+          ]
+        },
+        "chapter": {
+          "quality_targets": [
+            "section ordering matches outline intent",
+            "internal conceptual continuity",
+            "chapter-scope discipline"
+          ]
+        },
+        "book": {
+          "quality_targets": [
+            "chapter-to-chapter narrative continuity",
+            "cumulative argument development",
+            "global scope consistency"
+          ]
+        }
+      },
+      "outline_expansion": {
+        "chapter_goal_templates": {
+          "introduction": "Advance {chapter_title} as a 'introduction' chapter in the Constructive System-Building Form form with evidence-backed section cohesion.",
+          "critique_chapter": "Advance {chapter_title} as a 'critique_chapter' chapter in the Constructive System-Building Form form with evidence-backed section cohesion.",
+          "construct_chapter": "Advance {chapter_title} as a 'construct_chapter' chapter in the Constructive System-Building Form form with evidence-backed section cohesion.",
+          "integration_chapter": "Advance {chapter_title} as a 'integration_chapter' chapter in the Constructive System-Building Form form with evidence-backed section cohesion.",
+          "conclusion": "Advance {chapter_title} as a 'conclusion' chapter in the Constructive System-Building Form form with evidence-backed section cohesion."
+        },
+        "section_objective_templates": {
+          "gap_diagnosis": "Develop '{section_title}' in '{chapter_title}' by addressing gap diagnosis with explicit claims, citations, and transition logic.",
+          "thesis": "Develop '{section_title}' in '{chapter_title}' by addressing thesis with explicit claims, citations, and transition logic.",
+          "key_terms_preview": "Develop '{section_title}' in '{chapter_title}' by addressing key terms preview with explicit claims, citations, and transition logic.",
+          "evaluation_criteria": "Develop '{section_title}' in '{chapter_title}' by addressing evaluation criteria with explicit claims, citations, and transition logic.",
+          "existing_approach_reconstruction": "Develop '{section_title}' in '{chapter_title}' by addressing existing approach reconstruction with explicit claims, citations, and transition logic.",
+          "assumptions": "Develop '{section_title}' in '{chapter_title}' by addressing assumptions with explicit claims, citations, and transition logic.",
+          "failure_modes": "Develop '{section_title}' in '{chapter_title}' by addressing failure modes with explicit claims, citations, and transition logic.",
+          "design_requirements": "Develop '{section_title}' in '{chapter_title}' by addressing design requirements with explicit claims, citations, and transition logic.",
+          "definition": "Develop '{section_title}' in '{chapter_title}' by addressing definition with explicit claims, citations, and transition logic.",
+          "justification": "Develop '{section_title}' in '{chapter_title}' by addressing justification with explicit claims, citations, and transition logic.",
+          "boundaries": "Develop '{section_title}' in '{chapter_title}' by addressing boundaries with explicit claims, citations, and transition logic.",
+          "worked_example": "Develop '{section_title}' in '{chapter_title}' by addressing worked example with explicit claims, citations, and transition logic.",
+          "counterarguments": "Develop '{section_title}' in '{chapter_title}' by addressing counterarguments with explicit claims, citations, and transition logic.",
+          "construct_interactions": "Develop '{section_title}' in '{chapter_title}' by addressing construct interactions with explicit claims, citations, and transition logic.",
+          "full_system_spec": "Develop '{section_title}' in '{chapter_title}' by addressing full system spec with explicit claims, citations, and transition logic.",
+          "comparison_to_alternatives": "Develop '{section_title}' in '{chapter_title}' by addressing comparison to alternatives with explicit claims, citations, and transition logic.",
+          "tradeoffs": "Develop '{section_title}' in '{chapter_title}' by addressing tradeoffs with explicit claims, citations, and transition logic.",
+          "system_claims": "Develop '{section_title}' in '{chapter_title}' by addressing system claims with explicit claims, citations, and transition logic.",
+          "application_domains": "Develop '{section_title}' in '{chapter_title}' by addressing application domains with explicit claims, citations, and transition logic.",
+          "scope_conditions": "Develop '{section_title}' in '{chapter_title}' by addressing scope conditions with explicit claims, citations, and transition logic."
+        },
+        "subsection_templates": {
+          "gap_diagnosis": [
+            "Define Gap Diagnosis",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "thesis": [
+            "Define Thesis",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "key_terms_preview": [
+            "Define Key Terms Preview",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "evaluation_criteria": [
+            "Define Evaluation Criteria",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "existing_approach_reconstruction": [
+            "Define Existing Approach Reconstruction",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "assumptions": [
+            "Define Assumptions",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "failure_modes": [
+            "Define Failure Modes",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "design_requirements": [
+            "Define Design Requirements",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "definition": [
+            "Define Definition",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "justification": [
+            "Define Justification",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "boundaries": [
+            "Define Boundaries",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "worked_example": [
+            "Define Worked Example",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "counterarguments": [
+            "Define Counterarguments",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "construct_interactions": [
+            "Define Construct Interactions",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "full_system_spec": [
+            "Define Full System Spec",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "comparison_to_alternatives": [
+            "Define Comparison To Alternatives",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "tradeoffs": [
+            "Define Tradeoffs",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "system_claims": [
+            "Define System Claims",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "application_domains": [
+            "Define Application Domains",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "scope_conditions": [
+            "Define Scope Conditions",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ]
+        },
+        "prompt_hints": {
+          "section_planning_template": "Use the section objective and subsection plan to draft claims with explicit citations and figure references.",
+          "synthesis_template": "Synthesize the strongest claims into a transition that prepares the next section and chapter hand-off."
+        }
+      }
+    },
+    {
+      "id": "layered_evidence",
+      "name": "Layered Evidence Form",
+      "purpose": "Validate claims across empirical domains or methods, then integrate results into coherent inference.",
+      "core_ontology": [
+        {
+          "role": "research_question",
+          "label": "Question",
+          "definition": "States the question and specifies what counts as an adequate empirical or theoretical answer."
+        },
+        {
+          "role": "method_design",
+          "label": "Methods",
+          "definition": "Specifies sources, protocols, models, and validation strategies used to produce defensible results."
+        },
+        {
+          "role": "empirical_domains",
+          "label": "Empirical Domains",
+          "definition": "Partitions analysis into domains or hypotheses, each producing results plus explicit validity checks."
+        },
+        {
+          "role": "integration",
+          "label": "Integration",
+          "definition": "Triangulates across domains, reconciles conflicts, and updates the final supported claim set."
+        }
+      ],
+      "chapter_pattern": [
+        {
+          "type": "introduction",
+          "required_sections": [
+            "research_question",
+            "scope",
+            "contribution",
+            "overview_of_evidence_plan"
+          ]
+        },
+        {
+          "type": "methods_chapter",
+          "required_sections": [
+            "data_sources",
+            "models_or_protocols",
+            "validity_strategy",
+            "limitations"
+          ]
+        },
+        {
+          "type": "empirical_chapter",
+          "repeatable": true,
+          "required_sections": [
+            "hypotheses_or_domain_claims",
+            "analysis",
+            "validity_checks",
+            "interpretation"
+          ]
+        },
+        {
+          "type": "integration_chapter",
+          "required_sections": [
+            "triangulation",
+            "inconsistency_resolution",
+            "updated_claim_set",
+            "implications"
+          ]
+        },
+        {
+          "type": "conclusion",
+          "required_sections": [
+            "restated_findings",
+            "generalization_limits",
+            "future_use"
+          ]
+        }
+      ],
+      "validation": {
+        "required_checks": [
+          "le_result_without_method",
+          "le_validity_check_absence",
+          "le_correlation_causation_flag",
+          "le_integration_contradiction_drop"
+        ],
+        "rules": [
+          {
+            "id": "le_result_without_method",
+            "severity": "error",
+            "category": "structure",
+            "definitions": {
+              "what_it_detects": "Empirical results appear before methods and validity strategy are fully specified.",
+              "why_it_matters": "Readers cannot evaluate evidence quality if analytic choices are revealed post-hoc.",
+              "common_signals": [
+                "Results tables before methods chapter.",
+                "Unexplained estimators introduced mid-results."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "outline",
+                "chapter_text"
+              ],
+              "method": "static_check",
+              "steps": [
+                "Verify methods chapter precedes empirical chapters.",
+                "Scan pre-method chapters for result indicators and figure/table references.",
+                "Flag violations with chapter_id and excerpt locator."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          },
+          {
+            "id": "le_validity_check_absence",
+            "severity": "error",
+            "category": "evidence",
+            "definitions": {
+              "what_it_detects": "Empirical chapters lack explicit robustness, sensitivity, or audit checks tied to chapter claims.",
+              "why_it_matters": "Unvalidated results risk artifact-driven inference and weaken reproducibility guarantees.",
+              "common_signals": [
+                "No robustness section.",
+                "No uncertainty, sensitivity, or audit discussion."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "chapter_text",
+                "claim_ledger"
+              ],
+              "method": "hybrid",
+              "steps": [
+                "Locate validity_checks section in each empirical chapter.",
+                "Check for at least one robustness/bias claim per main claim group.",
+                "Flag chapters with missing or generic validity content."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          },
+          {
+            "id": "le_correlation_causation_flag",
+            "severity": "soft_error",
+            "category": "logic",
+            "definitions": {
+              "what_it_detects": "Causal language in observational analyses without identification strategy or mechanism evidence.",
+              "why_it_matters": "Causal overstatement misrepresents inferential strength and weakens empirical credibility.",
+              "common_signals": [
+                "Causal verbs near correlational results.",
+                "No identification or confounding discussion."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "chapter_text",
+                "methods_chapter",
+                "claim_ledger"
+              ],
+              "method": "heuristic_nlp",
+              "steps": [
+                "Detect causal language density in empirical chapters.",
+                "Check for identification markers in methods chapter.",
+                "Classify: causal_overstatement, identification_missing, mechanism_missing."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          },
+          {
+            "id": "le_integration_contradiction_drop",
+            "severity": "soft_error",
+            "category": "coherence",
+            "definitions": {
+              "what_it_detects": "Integration chapter omits contradictory results without explicit reconciliation steps.",
+              "why_it_matters": "Unreconciled contradictions produce narrative smoothing and reduce trust in synthesis.",
+              "common_signals": [
+                "Mixed results in domain chapters become all-positive synthesis.",
+                "No inconsistency resolution despite conflicts."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "integration_chapter",
+                "claim_ledger",
+                "chapter_text"
+              ],
+              "method": "hybrid",
+              "steps": [
+                "Identify domain claims marked contradicts or mixed.",
+                "Check integration chapter for explicit references and reconciliation.",
+                "Classify: contradiction_ignored, caveat_removed, scope_shifted."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          }
+        ]
+      },
+      "elements": [
+        {
+          "id": "research_question",
+          "label": "Research Question",
+          "definition": "Defines 'Research Question' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "scope",
+          "label": "Scope",
+          "definition": "Defines 'Scope' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "contribution",
+          "label": "Contribution",
+          "definition": "Defines 'Contribution' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "overview_of_evidence_plan",
+          "label": "Overview Of Evidence Plan",
+          "definition": "Defines 'Overview Of Evidence Plan' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "data_sources",
+          "label": "Data Sources",
+          "definition": "Defines 'Data Sources' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "models_or_protocols",
+          "label": "Models Or Protocols",
+          "definition": "Defines 'Models Or Protocols' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "validity_strategy",
+          "label": "Validity Strategy",
+          "definition": "Defines 'Validity Strategy' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "limitations",
+          "label": "Limitations",
+          "definition": "Defines 'Limitations' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "hypotheses_or_domain_claims",
+          "label": "Hypotheses Or Domain Claims",
+          "definition": "Defines 'Hypotheses Or Domain Claims' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "analysis",
+          "label": "Analysis",
+          "definition": "Defines 'Analysis' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "validity_checks",
+          "label": "Validity Checks",
+          "definition": "Defines 'Validity Checks' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "interpretation",
+          "label": "Interpretation",
+          "definition": "Defines 'Interpretation' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "triangulation",
+          "label": "Triangulation",
+          "definition": "Defines 'Triangulation' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "inconsistency_resolution",
+          "label": "Inconsistency Resolution",
+          "definition": "Defines 'Inconsistency Resolution' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "updated_claim_set",
+          "label": "Updated Claim Set",
+          "definition": "Defines 'Updated Claim Set' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "implications",
+          "label": "Implications",
+          "definition": "Defines 'Implications' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "restated_findings",
+          "label": "Restated Findings",
+          "definition": "Defines 'Restated Findings' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "generalization_limits",
+          "label": "Generalization Limits",
+          "definition": "Defines 'Generalization Limits' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "future_use",
+          "label": "Future Use",
+          "definition": "Defines 'Future Use' as a required element in the Layered Evidence Form chapter pattern for coordinated drafting and review."
+        }
+      ],
+      "coordination_ontology": {
+        "paragraph": {
+          "quality_targets": [
+            "readability",
+            "authoritative tone",
+            "persuasive flow",
+            "explicit evidence grounding"
+          ],
+          "require_citation_markers": true,
+          "min_words": 12,
+          "concise_suffix": " This supports the section's argument with concise evidence."
+        },
+        "section": {
+          "quality_targets": [
+            "paragraph-to-objective coherence",
+            "clear claim progression",
+            "evidence-to-claim traceability",
+            "transition-ready closing"
+          ]
+        },
+        "chapter": {
+          "quality_targets": [
+            "section ordering matches outline intent",
+            "internal conceptual continuity",
+            "chapter-scope discipline"
+          ]
+        },
+        "book": {
+          "quality_targets": [
+            "chapter-to-chapter narrative continuity",
+            "cumulative argument development",
+            "global scope consistency"
+          ]
+        }
+      },
+      "outline_expansion": {
+        "chapter_goal_templates": {
+          "introduction": "Advance {chapter_title} as a 'introduction' chapter in the Layered Evidence Form form with evidence-backed section cohesion.",
+          "methods_chapter": "Advance {chapter_title} as a 'methods_chapter' chapter in the Layered Evidence Form form with evidence-backed section cohesion.",
+          "empirical_chapter": "Advance {chapter_title} as a 'empirical_chapter' chapter in the Layered Evidence Form form with evidence-backed section cohesion.",
+          "integration_chapter": "Advance {chapter_title} as a 'integration_chapter' chapter in the Layered Evidence Form form with evidence-backed section cohesion.",
+          "conclusion": "Advance {chapter_title} as a 'conclusion' chapter in the Layered Evidence Form form with evidence-backed section cohesion."
+        },
+        "section_objective_templates": {
+          "research_question": "Develop '{section_title}' in '{chapter_title}' by addressing research question with explicit claims, citations, and transition logic.",
+          "scope": "Develop '{section_title}' in '{chapter_title}' by addressing scope with explicit claims, citations, and transition logic.",
+          "contribution": "Develop '{section_title}' in '{chapter_title}' by addressing contribution with explicit claims, citations, and transition logic.",
+          "overview_of_evidence_plan": "Develop '{section_title}' in '{chapter_title}' by addressing overview of evidence plan with explicit claims, citations, and transition logic.",
+          "data_sources": "Develop '{section_title}' in '{chapter_title}' by addressing data sources with explicit claims, citations, and transition logic.",
+          "models_or_protocols": "Develop '{section_title}' in '{chapter_title}' by addressing models or protocols with explicit claims, citations, and transition logic.",
+          "validity_strategy": "Develop '{section_title}' in '{chapter_title}' by addressing validity strategy with explicit claims, citations, and transition logic.",
+          "limitations": "Develop '{section_title}' in '{chapter_title}' by addressing limitations with explicit claims, citations, and transition logic.",
+          "hypotheses_or_domain_claims": "Develop '{section_title}' in '{chapter_title}' by addressing hypotheses or domain claims with explicit claims, citations, and transition logic.",
+          "analysis": "Develop '{section_title}' in '{chapter_title}' by addressing analysis with explicit claims, citations, and transition logic.",
+          "validity_checks": "Develop '{section_title}' in '{chapter_title}' by addressing validity checks with explicit claims, citations, and transition logic.",
+          "interpretation": "Develop '{section_title}' in '{chapter_title}' by addressing interpretation with explicit claims, citations, and transition logic.",
+          "triangulation": "Develop '{section_title}' in '{chapter_title}' by addressing triangulation with explicit claims, citations, and transition logic.",
+          "inconsistency_resolution": "Develop '{section_title}' in '{chapter_title}' by addressing inconsistency resolution with explicit claims, citations, and transition logic.",
+          "updated_claim_set": "Develop '{section_title}' in '{chapter_title}' by addressing updated claim set with explicit claims, citations, and transition logic.",
+          "implications": "Develop '{section_title}' in '{chapter_title}' by addressing implications with explicit claims, citations, and transition logic.",
+          "restated_findings": "Develop '{section_title}' in '{chapter_title}' by addressing restated findings with explicit claims, citations, and transition logic.",
+          "generalization_limits": "Develop '{section_title}' in '{chapter_title}' by addressing generalization limits with explicit claims, citations, and transition logic.",
+          "future_use": "Develop '{section_title}' in '{chapter_title}' by addressing future use with explicit claims, citations, and transition logic."
+        },
+        "subsection_templates": {
+          "research_question": [
+            "Define Research Question",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "scope": [
+            "Define Scope",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "contribution": [
+            "Define Contribution",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "overview_of_evidence_plan": [
+            "Define Overview Of Evidence Plan",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "data_sources": [
+            "Define Data Sources",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "models_or_protocols": [
+            "Define Models Or Protocols",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "validity_strategy": [
+            "Define Validity Strategy",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "limitations": [
+            "Define Limitations",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "hypotheses_or_domain_claims": [
+            "Define Hypotheses Or Domain Claims",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "analysis": [
+            "Define Analysis",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "validity_checks": [
+            "Define Validity Checks",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "interpretation": [
+            "Define Interpretation",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "triangulation": [
+            "Define Triangulation",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "inconsistency_resolution": [
+            "Define Inconsistency Resolution",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "updated_claim_set": [
+            "Define Updated Claim Set",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "implications": [
+            "Define Implications",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "restated_findings": [
+            "Define Restated Findings",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "generalization_limits": [
+            "Define Generalization Limits",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "future_use": [
+            "Define Future Use",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ]
+        },
+        "prompt_hints": {
+          "section_planning_template": "Use the section objective and subsection plan to draft claims with explicit citations and figure references.",
+          "synthesis_template": "Synthesize the strongest claims into a transition that prepares the next section and chapter hand-off."
+        }
+      }
+    },
+    {
+      "id": "interpretive_domain",
+      "name": "Interpretive Domain Form",
+      "purpose": "Develop an interpretive thesis by opening thematic arenas anchored in close evidence, then reframing.",
+      "core_ontology": [
+        {
+          "role": "site_or_corpus",
+          "label": "Site/Corpus",
+          "definition": "Defines bounded field site or text corpus serving as primary material for interpretation."
+        },
+        {
+          "role": "thematic_arenas",
+          "label": "Thematic Arenas",
+          "definition": "Organizes chapters by recurring practices or discourses, each yielding interpretive claims."
+        },
+        {
+          "role": "conceptual_reframing",
+          "label": "Reframing",
+          "definition": "Synthesizes themes into revised concepts that explain the corpus and connect to scholarship."
+        }
+      ],
+      "chapter_pattern": [
+        {
+          "type": "introduction",
+          "required_sections": [
+            "site_or_corpus_definition",
+            "interpretive_question",
+            "analytic_frame",
+            "thesis"
+          ]
+        },
+        {
+          "type": "thematic_chapter",
+          "repeatable": true,
+          "required_sections": [
+            "vignette_or_excerpt",
+            "close_reading_or_thick_description",
+            "interpretation",
+            "link_to_thesis"
+          ]
+        },
+        {
+          "type": "reframing_chapter",
+          "required_sections": [
+            "theme_synthesis",
+            "conceptual_update",
+            "relation_to_literature",
+            "implications"
+          ]
+        },
+        {
+          "type": "conclusion",
+          "required_sections": [
+            "restated_thesis",
+            "transferability_limits",
+            "next_arenas"
+          ]
+        }
+      ],
+      "validation": {
+        "required_checks": [
+          "id_anchorless_interpretation",
+          "id_thesis_link_dropout",
+          "id_overinterpretation_flag"
+        ],
+        "rules": [
+          {
+            "id": "id_anchorless_interpretation",
+            "severity": "error",
+            "category": "evidence",
+            "definitions": {
+              "what_it_detects": "Interpretive claims stated without an excerpt, vignette, or primary evidence anchor.",
+              "why_it_matters": "Interpretation without anchor becomes free-floating and cannot be audited by readers.",
+              "common_signals": [
+                "Claims about patterns without exemplars.",
+                "Theory-forward chapter never returns to primary material."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "chapter_text",
+                "outline"
+              ],
+              "method": "heuristic_nlp",
+              "steps": [
+                "Detect vignette_or_excerpt section or equivalent anchor blocks.",
+                "Scan for quotation markers or described scenes.",
+                "Flag chapters missing anchor signals above minimum threshold."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          },
+          {
+            "id": "id_thesis_link_dropout",
+            "severity": "soft_error",
+            "category": "coherence",
+            "definitions": {
+              "what_it_detects": "Thematic chapters lack explicit statements linking interpretations to the book thesis.",
+              "why_it_matters": "Without thesis linkage, chapters become adjacent essays and the argument loses arc.",
+              "common_signals": [
+                "Chapter ends without bridge to thesis.",
+                "Key terms drift without mapping to thesis vocabulary."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "chapter_text",
+                "claim_ledger",
+                "outline"
+              ],
+              "method": "hybrid",
+              "steps": [
+                "Locate link_to_thesis section or final chapter paragraphs.",
+                "Check for explicit thesis term usage or mapping statements.",
+                "Classify: missing_link, term_drift, implication_missing."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          },
+          {
+            "id": "id_overinterpretation_flag",
+            "severity": "soft_error",
+            "category": "rhetoric",
+            "definitions": {
+              "what_it_detects": "Interpretive claims exceed excerpt support, treating isolated passages as totalizing evidence.",
+              "why_it_matters": "Overinterpretation collapses corpus variability and undermines credibility of thematic inference.",
+              "common_signals": [
+                "Universal statements after a single excerpt.",
+                "Claims ignore counterexamples elsewhere in corpus."
+              ]
+            },
+            "test": {
+              "inputs": [
+                "section_text",
+                "claim_ledger",
+                "evidence_graph"
+              ],
+              "method": "llm_judge",
+              "steps": [
+                "Pair interpretive claims with nearest excerpt anchors.",
+                "Judge whether claim strength matches excerpt support level.",
+                "Classify: totalizing_from_instance, counterexample_ignored, claim_strength_mismatch."
+              ],
+              "outputs": {
+                "pass": true,
+                "score_0_1": 0.0,
+                "findings": []
+              }
+            }
+          }
+        ]
+      },
+      "elements": [
+        {
+          "id": "site_or_corpus_definition",
+          "label": "Site Or Corpus Definition",
+          "definition": "Defines 'Site Or Corpus Definition' as a required element in the Interpretive Domain Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "interpretive_question",
+          "label": "Interpretive Question",
+          "definition": "Defines 'Interpretive Question' as a required element in the Interpretive Domain Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "analytic_frame",
+          "label": "Analytic Frame",
+          "definition": "Defines 'Analytic Frame' as a required element in the Interpretive Domain Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "thesis",
+          "label": "Thesis",
+          "definition": "Defines 'Thesis' as a required element in the Interpretive Domain Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "vignette_or_excerpt",
+          "label": "Vignette Or Excerpt",
+          "definition": "Defines 'Vignette Or Excerpt' as a required element in the Interpretive Domain Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "close_reading_or_thick_description",
+          "label": "Close Reading Or Thick Description",
+          "definition": "Defines 'Close Reading Or Thick Description' as a required element in the Interpretive Domain Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "interpretation",
+          "label": "Interpretation",
+          "definition": "Defines 'Interpretation' as a required element in the Interpretive Domain Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "link_to_thesis",
+          "label": "Link To Thesis",
+          "definition": "Defines 'Link To Thesis' as a required element in the Interpretive Domain Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "theme_synthesis",
+          "label": "Theme Synthesis",
+          "definition": "Defines 'Theme Synthesis' as a required element in the Interpretive Domain Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "conceptual_update",
+          "label": "Conceptual Update",
+          "definition": "Defines 'Conceptual Update' as a required element in the Interpretive Domain Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "relation_to_literature",
+          "label": "Relation To Literature",
+          "definition": "Defines 'Relation To Literature' as a required element in the Interpretive Domain Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "implications",
+          "label": "Implications",
+          "definition": "Defines 'Implications' as a required element in the Interpretive Domain Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "restated_thesis",
+          "label": "Restated Thesis",
+          "definition": "Defines 'Restated Thesis' as a required element in the Interpretive Domain Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "transferability_limits",
+          "label": "Transferability Limits",
+          "definition": "Defines 'Transferability Limits' as a required element in the Interpretive Domain Form chapter pattern for coordinated drafting and review."
+        },
+        {
+          "id": "next_arenas",
+          "label": "Next Arenas",
+          "definition": "Defines 'Next Arenas' as a required element in the Interpretive Domain Form chapter pattern for coordinated drafting and review."
+        }
+      ],
+      "coordination_ontology": {
+        "paragraph": {
+          "quality_targets": [
+            "readability",
+            "authoritative tone",
+            "persuasive flow",
+            "explicit evidence grounding"
+          ],
+          "require_citation_markers": true,
+          "min_words": 12,
+          "concise_suffix": " This supports the section's argument with concise evidence."
+        },
+        "section": {
+          "quality_targets": [
+            "paragraph-to-objective coherence",
+            "clear claim progression",
+            "evidence-to-claim traceability",
+            "transition-ready closing"
+          ]
+        },
+        "chapter": {
+          "quality_targets": [
+            "section ordering matches outline intent",
+            "internal conceptual continuity",
+            "chapter-scope discipline"
+          ]
+        },
+        "book": {
+          "quality_targets": [
+            "chapter-to-chapter narrative continuity",
+            "cumulative argument development",
+            "global scope consistency"
+          ]
+        }
+      },
+      "outline_expansion": {
+        "chapter_goal_templates": {
+          "introduction": "Advance {chapter_title} as a 'introduction' chapter in the Interpretive Domain Form form with evidence-backed section cohesion.",
+          "thematic_chapter": "Advance {chapter_title} as a 'thematic_chapter' chapter in the Interpretive Domain Form form with evidence-backed section cohesion.",
+          "reframing_chapter": "Advance {chapter_title} as a 'reframing_chapter' chapter in the Interpretive Domain Form form with evidence-backed section cohesion.",
+          "conclusion": "Advance {chapter_title} as a 'conclusion' chapter in the Interpretive Domain Form form with evidence-backed section cohesion."
+        },
+        "section_objective_templates": {
+          "site_or_corpus_definition": "Develop '{section_title}' in '{chapter_title}' by addressing site or corpus definition with explicit claims, citations, and transition logic.",
+          "interpretive_question": "Develop '{section_title}' in '{chapter_title}' by addressing interpretive question with explicit claims, citations, and transition logic.",
+          "analytic_frame": "Develop '{section_title}' in '{chapter_title}' by addressing analytic frame with explicit claims, citations, and transition logic.",
+          "thesis": "Develop '{section_title}' in '{chapter_title}' by addressing thesis with explicit claims, citations, and transition logic.",
+          "vignette_or_excerpt": "Develop '{section_title}' in '{chapter_title}' by addressing vignette or excerpt with explicit claims, citations, and transition logic.",
+          "close_reading_or_thick_description": "Develop '{section_title}' in '{chapter_title}' by addressing close reading or thick description with explicit claims, citations, and transition logic.",
+          "interpretation": "Develop '{section_title}' in '{chapter_title}' by addressing interpretation with explicit claims, citations, and transition logic.",
+          "link_to_thesis": "Develop '{section_title}' in '{chapter_title}' by addressing link to thesis with explicit claims, citations, and transition logic.",
+          "theme_synthesis": "Develop '{section_title}' in '{chapter_title}' by addressing theme synthesis with explicit claims, citations, and transition logic.",
+          "conceptual_update": "Develop '{section_title}' in '{chapter_title}' by addressing conceptual update with explicit claims, citations, and transition logic.",
+          "relation_to_literature": "Develop '{section_title}' in '{chapter_title}' by addressing relation to literature with explicit claims, citations, and transition logic.",
+          "implications": "Develop '{section_title}' in '{chapter_title}' by addressing implications with explicit claims, citations, and transition logic.",
+          "restated_thesis": "Develop '{section_title}' in '{chapter_title}' by addressing restated thesis with explicit claims, citations, and transition logic.",
+          "transferability_limits": "Develop '{section_title}' in '{chapter_title}' by addressing transferability limits with explicit claims, citations, and transition logic.",
+          "next_arenas": "Develop '{section_title}' in '{chapter_title}' by addressing next arenas with explicit claims, citations, and transition logic."
+        },
+        "subsection_templates": {
+          "site_or_corpus_definition": [
+            "Define Site Or Corpus Definition",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "interpretive_question": [
+            "Define Interpretive Question",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "analytic_frame": [
+            "Define Analytic Frame",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "thesis": [
+            "Define Thesis",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "vignette_or_excerpt": [
+            "Define Vignette Or Excerpt",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "close_reading_or_thick_description": [
+            "Define Close Reading Or Thick Description",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "interpretation": [
+            "Define Interpretation",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "link_to_thesis": [
+            "Define Link To Thesis",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "theme_synthesis": [
+            "Define Theme Synthesis",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "conceptual_update": [
+            "Define Conceptual Update",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "relation_to_literature": [
+            "Define Relation To Literature",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "implications": [
+            "Define Implications",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "restated_thesis": [
+            "Define Restated Thesis",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "transferability_limits": [
+            "Define Transferability Limits",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ],
+          "next_arenas": [
+            "Define Next Arenas",
+            "Evidence and Citations",
+            "Mechanisms and Interpretation",
+            "Implications and Transition"
+          ]
+        },
+        "prompt_hints": {
+          "section_planning_template": "Use the section objective and subsection plan to draft claims with explicit citations and figure references.",
+          "synthesis_template": "Synthesize the strongest claims into a transition that prepares the next section and chapter hand-off."
+        }
+      }
+    }
+  ],
+  "version": "1.1",
+  "default_form_id": "sequential_transformation",
+  "default_soft_validation_profile": "common",
+  "soft_validation_profiles": {
+    "common": {
+      "outline": {
+        "section_match_threshold": 0.5,
+        "ontology_match_threshold": 0.45,
+        "missing_required_ratio_soft_error": 0.4,
+        "introduction_keywords": [
+          "intro",
+          "introduction",
+          "problem",
+          "background",
+          "foundations"
+        ],
+        "conclusion_keywords": [
+          "conclusion",
+          "synthesis",
+          "implications",
+          "discussion",
+          "limits"
+        ]
+      },
+      "bibliography": {
+        "min_text_chars": 60,
+        "max_missing_ratio": 0.35
+      },
+      "prompts": {
+        "required_prompt_keys": [
+          "claim_template",
+          "paragraph_template",
+          "empty_section_template",
+          "figure_reference_template"
+        ],
+        "claim_required_placeholders": [
+          "{source_title}",
+          "{lead_entity}",
+          "{section_title"
+        ]
+      },
+      "agents": {
+        "min_top_k": 1
+      },
+      "claims": {
+        "min_evidence_link_ratio": 0.7,
+        "transition_keywords": [
+          "transition",
+          "turning",
+          "shift",
+          "phase",
+          "pivot",
+          "therefore"
+        ]
+      },
+      "rhetoric": {
+        "teleology_terms": [
+          "inevitable",
+          "bound to",
+          "destined",
+          "naturally",
+          "unavoidably"
+        ],
+        "max_teleology_ratio_without_warrant": 0.25
+      },
+      "rule_coverage": {
+        "implemented_prefixes": [
+          "st_",
+          "sc_",
+          "cs_",
+          "le_",
+          "id_"
+        ]
+      }
+    },
+    "argumentative": {
+      "claims": {
+        "min_evidence_link_ratio": 0.75
+      },
+      "rhetoric": {
+        "max_teleology_ratio_without_warrant": 0.2
+      }
+    },
+    "exploratory": {
+      "claims": {
+        "min_evidence_link_ratio": 0.6
+      },
+      "bibliography": {
+        "max_missing_ratio": 0.45
+      }
+    }
+  },
+  "companion_ontologies": [
+    {
+      "id": "wilson_academic_writing_companion",
+      "path": "ontology/wilson_academic_writing_ontology.json",
+      "purpose": "Background prompts, assumptions, and companion validations aligned to academic writing process guidance."
+    }
+  ]
+}

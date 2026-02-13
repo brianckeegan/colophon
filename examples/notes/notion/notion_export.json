@@ -1,0 +1,15 @@
+{
+  "pages": [
+    {
+      "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "title": "Research Plan aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "content": "Outline draft with link to [Methods](Methods%20bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.md)",
+      "url": "https://www.notion.so/workspace/research-plan"
+    },
+    {
+      "id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "title": "Methods bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "content": "Method page includes evidence extraction and embedding workflow."
+    }
+  ]
+}

@@ -1,0 +1,830 @@
+{
+  "id": "colophon_technical_forms_catalog",
+  "name": "Colophon Technical Forms Catalog",
+  "ontology_type": "functional_forms_catalog",
+  "version": "0.1.0-tech",
+  "schema_version": "0.1.0-tech",
+  "validation_rule_schema": {
+    "id": "string",
+    "severity": "error|soft_error|warning|info",
+    "category": "structure|coverage|evidence|logic|rhetoric|citation|scope|reproducibility",
+    "definitions": {
+      "what_it_detects": "10-20 words describing the failure condition or breakdown.",
+      "why_it_matters": "10-20 words linking the failure to inference quality or usability.",
+      "common_signals": ["10-20 words describing common textual or structural symptoms."]
+    },
+    "test": {
+      "inputs": [
+        "outline",
+        "doc_text",
+        "section_text",
+        "claim_ledger",
+        "artifact_manifest",
+        "experiment_log",
+        "reference_catalog"
+      ],
+      "method": "static_check|heuristic_nlp|llm_judge|hybrid",
+      "steps": ["string"],
+      "outputs": {
+        "pass": "boolean",
+        "score_0_1": "number",
+        "findings": [
+          {
+            "classification": "string",
+            "span_hint": "section_id/claim_id/figure_id or approximate excerpt locator",
+            "message": "string",
+            "suggested_fix": "string"
+          }
+        ]
+      }
+    }
+  },
+  "primitive_objects": {
+    "Reference": {
+      "definition": "Stable source identifier with metadata, enabling citations, provenance tracking, and deduplication.",
+      "fields": {
+        "ref_id": "string",
+        "citation_key": "string",
+        "type": "paper|book|spec|dataset|repo|web|patent|report",
+        "provenance": {
+          "origin": "string",
+          "accessed_at": "YYYY-MM-DD",
+          "locator_strategy": "doi|url|isbn|commit|arxiv|other",
+          "notes": "string"
+        }
+      }
+    },
+    "Claim": {
+      "definition": "Atomic assertion with scope, status, and evidence links suitable for validation and reuse.",
+      "fields": {
+        "claim_id": "string",
+        "type": "problem|method|result|interpretation|limitation|design|theorem|spec_requirement",
+        "assertion": "10-40 word assertive statement with explicit scope.",
+        "scope": "string",
+        "status": "proposed|accepted|rejected",
+        "confidence": "low|medium|high",
+        "dependencies": ["claim_id"],
+        "evidence_links": ["evidence_id"]
+      }
+    },
+    "Evidence": {
+      "definition": "First-class support object linking a claim to a source with an explicit relation and rationale.",
+      "fields": {
+        "evidence_id": "string",
+        "ref_id": "string",
+        "relation": "supports|complicates|contradicts",
+        "rationale": "One to two sentences connecting source content to claim.",
+        "locator": "page|figure|table|section|commit|line_range|experiment_run_id"
+      }
+    },
+    "Artifact": {
+      "definition": "Reproducible object produced or used by the work, with versioning and integrity checks.",
+      "fields": {
+        "artifact_id": "string",
+        "type": "code|data|model|binary|figure|notebook|container",
+        "location": "path|url",
+        "version": "string",
+        "hash_sha256": "string",
+        "build_instructions": "string"
+      }
+    },
+    "ExperimentRun": {
+      "definition": "Logged execution instance of an experiment or benchmark with configuration and outputs.",
+      "fields": {
+        "run_id": "string",
+        "timestamp": "ISO-8601",
+        "environment": "string",
+        "config": "object",
+        "inputs": ["artifact_id"],
+        "outputs": ["artifact_id"],
+        "metrics": "object",
+        "notes": "string"
+      }
+    }
+  },
+  "functional_forms": [
+    {
+      "id": "imrad_contribution",
+      "name": "IMRaD Contribution Form",
+      "definition": "Empirical contribution argued through problem framing, method, results, and interpretation.",
+      "core_ontology": [
+        {
+          "role": "problem_frame",
+          "definition": "States technical gap, stakes, and evaluation criterion that defines success for the contribution."
+        },
+        {
+          "role": "method_spec",
+          "definition": "Defines algorithm, design, or procedure with assumptions sufficient for replication and critique."
+        },
+        {
+          "role": "results_evidence",
+          "definition": "Reports findings with metrics, uncertainty, and baselines, linked to claims and artifacts."
+        },
+        {
+          "role": "interpretation_limits",
+          "definition": "Explains what results imply, addresses threats, and states scope conditions and limitations."
+        }
+      ],
+      "chapter_or_section_pattern": [
+        {
+          "type": "introduction",
+          "required_elements": ["problem_frame", "contribution_claim", "evaluation_criterion", "related_work_boundary"]
+        },
+        {
+          "type": "methods",
+          "required_elements": ["method_spec", "assumptions", "implementation_details", "artifact_manifest"]
+        },
+        {
+          "type": "experiments",
+          "required_elements": ["benchmark_design", "baselines", "results_evidence", "ablation_or_sensitivity"]
+        },
+        {
+          "type": "discussion",
+          "required_elements": ["interpretation_limits", "failure_modes", "threats_to_validity", "scope_conditions"]
+        }
+      ],
+      "elements": [
+        {
+          "id": "contribution_claim",
+          "definition": "One-sentence statement of what is new, compared to which baseline or prior work."
+        },
+        {
+          "id": "evaluation_criterion",
+          "definition": "Defines success metrics, constraints, and target setting, enabling clear acceptance testing."
+        },
+        {
+          "id": "related_work_boundary",
+          "definition": "Specifies which prior approaches count as nearest neighbors and why others are excluded."
+        },
+        {
+          "id": "assumptions",
+          "definition": "Lists modeling, hardware, data, or distribution assumptions required for results to hold."
+        },
+        {
+          "id": "implementation_details",
+          "definition": "Records parameters, hyperparameters, pseudo-code, and complexity details enabling reimplementation."
+        },
+        {
+          "id": "artifact_manifest",
+          "definition": "Enumerates code, data, and environment artifacts with hashes and build instructions."
+        },
+        {
+          "id": "benchmark_design",
+          "definition": "Specifies datasets, tasks, splits, metrics, and statistical procedures for comparison."
+        },
+        {
+          "id": "baselines",
+          "definition": "Defines comparison systems and why they are fair, strong, and relevant to the claim."
+        },
+        {
+          "id": "ablation_or_sensitivity",
+          "definition": "Tests contribution components or parameter sensitivity to isolate what drives performance."
+        },
+        {
+          "id": "failure_modes",
+          "definition": "Documents when the method fails, with concrete cases, diagnostics, and potential causes."
+        },
+        {
+          "id": "threats_to_validity",
+          "definition": "Enumerates confounds, biases, measurement limits, and external validity constraints."
+        },
+        {
+          "id": "scope_conditions",
+          "definition": "States contexts where claims apply and explicit boundaries where claims should not generalize."
+        }
+      ],
+      "validation": {
+        "required_checks": [
+          "imrad_results_without_method",
+          "imrad_baseline_missing",
+          "imrad_causal_language_overreach",
+          "imrad_metric_mismatch",
+          "imrad_artifact_integrity_gap"
+        ],
+        "rules": [
+          {
+            "id": "imrad_results_without_method",
+            "severity": "error",
+            "category": "structure",
+            "definitions": {
+              "what_it_detects": "Results appear before method specification or without enough detail to reproduce.",
+              "why_it_matters": "Readers cannot evaluate findings if analytic choices remain implicit or post-hoc.",
+              "common_signals": ["Tables appear before methods section.", "Undefined settings or datasets referenced in results."]
+            },
+            "test": {
+              "inputs": ["outline", "doc_text"],
+              "method": "static_check",
+              "steps": [
+                "Verify methods precede experiments in outline.",
+                "Scan pre-method sections for metric tables or result cues.",
+                "Emit finding with section span hints for each violation."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          },
+          {
+            "id": "imrad_baseline_missing",
+            "severity": "soft_error",
+            "category": "evidence",
+            "definitions": {
+              "what_it_detects": "Performance claims lack strong baselines or omit the most relevant prior comparators.",
+              "why_it_matters": "Without baselines, improvements cannot be attributed to the proposed contribution.",
+              "common_signals": ["Only one weak baseline used.", "No justification for excluded standard baselines."]
+            },
+            "test": {
+              "inputs": ["section_text", "reference_catalog", "claim_ledger"],
+              "method": "llm_judge",
+              "steps": [
+                "Extract contribution and performance claims.",
+                "Judge whether baselines listed are standard for the task.",
+                "Classify: baseline_missing, baseline_weak, baseline_unjustified_exclusion."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          },
+          {
+            "id": "imrad_causal_language_overreach",
+            "severity": "soft_error",
+            "category": "logic",
+            "definitions": {
+              "what_it_detects": "Causal claims made from correlational evidence without identification or mechanism evidence.",
+              "why_it_matters": "Causal overstatement misrepresents inferential strength and misleads downstream use.",
+              "common_signals": ["Uses 'causes' near observational comparisons.", "No mechanism trace or controlled experiment evidence."]
+            },
+            "test": {
+              "inputs": ["section_text", "claim_ledger"],
+              "method": "heuristic_nlp",
+              "steps": [
+                "Detect causal verbs and inevitability terms near results.",
+                "Check for identification markers or controlled design mentions.",
+                "Classify: causal_overstatement, identification_missing, mechanism_missing."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          },
+          {
+            "id": "imrad_metric_mismatch",
+            "severity": "soft_error",
+            "category": "logic",
+            "definitions": {
+              "what_it_detects": "Claims of improvement misalign with reported metrics or evaluation criteria.",
+              "why_it_matters": "Metric mismatch yields incorrect conclusions and undermines credibility of comparisons.",
+              "common_signals": ["Claim cites accuracy but table reports F1 only.", "Optimization target differs from evaluation metric."]
+            },
+            "test": {
+              "inputs": ["claim_ledger", "section_text"],
+              "method": "hybrid",
+              "steps": [
+                "Extract evaluation_criterion metrics and constraints.",
+                "Match improvement claims to cited metrics in tables/figures.",
+                "Emit findings for mismatches with suggested corrections."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          },
+          {
+            "id": "imrad_artifact_integrity_gap",
+            "severity": "soft_error",
+            "category": "reproducibility",
+            "definitions": {
+              "what_it_detects": "Artifacts referenced in text lack hashes, versions, or build instructions in manifest.",
+              "why_it_matters": "Unverifiable artifacts block reproduction and weaken claims tied to computational results.",
+              "common_signals": ["Repo mentioned without commit.", "Dataset used without version or checksum."]
+            },
+            "test": {
+              "inputs": ["artifact_manifest", "doc_text"],
+              "method": "static_check",
+              "steps": [
+                "Extract artifact references from doc_text.",
+                "Verify each reference maps to Artifact with hash and version.",
+                "Emit missing entries with suggested manifest patches."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "systems_architecture_tradeoffs",
+      "name": "Systems Architecture and Tradeoffs Form",
+      "definition": "Design argument structured around requirements, architecture decisions, and measured tradeoffs.",
+      "core_ontology": [
+        {
+          "role": "requirements",
+          "definition": "Defines functional and nonfunctional constraints shaping the system design space."
+        },
+        {
+          "role": "architecture",
+          "definition": "Specifies components, interfaces, dataflow, and invariants, enabling reasoning about behavior."
+        },
+        {
+          "role": "decision_rationale",
+          "definition": "Records alternatives, tradeoffs, and why chosen design best satisfies prioritized requirements."
+        },
+        {
+          "role": "evaluation_in_context",
+          "definition": "Measures performance, reliability, and scalability, mapping metrics back to requirements."
+        }
+      ],
+      "section_pattern": [
+        { "type": "problem_and_requirements", "required_elements": ["requirements", "threat_model_or_risks"] },
+        { "type": "architecture_overview", "required_elements": ["architecture", "invariants", "interfaces"] },
+        { "type": "design_decisions", "required_elements": ["decision_rationale", "alternatives_considered"] },
+        { "type": "evaluation", "required_elements": ["evaluation_in_context", "workload_characterization", "bottleneck_analysis"] }
+      ],
+      "elements": [
+        { "id": "threat_model_or_risks", "definition": "Enumerates failure modes, adversaries, or operational risks that requirements must address." },
+        { "id": "invariants", "definition": "States properties the system must preserve, enabling proofs, tests, or runtime checks." },
+        { "id": "interfaces", "definition": "Defines API contracts and data schemas, clarifying boundaries and responsibility allocation." },
+        { "id": "alternatives_considered", "definition": "Lists credible alternative designs and why they were rejected under stated requirements." },
+        { "id": "workload_characterization", "definition": "Defines representative workloads, inputs, and operating conditions used during evaluation." },
+        { "id": "bottleneck_analysis", "definition": "Identifies limiting resources or components and connects them to observed performance constraints." }
+      ],
+      "validation": {
+        "required_checks": [
+          "sys_requirements_traceability_gap",
+          "sys_unjustified_design_choice",
+          "sys_unrealistic_workload",
+          "sys_tradeoff_handwaving"
+        ],
+        "rules": [
+          {
+            "id": "sys_requirements_traceability_gap",
+            "severity": "soft_error",
+            "category": "coverage",
+            "definitions": {
+              "what_it_detects": "Architecture and evaluation sections fail to trace back to stated requirements.",
+              "why_it_matters": "Without traceability, design choices become arbitrary and evaluation loses meaning.",
+              "common_signals": ["Requirements list never referenced later.", "Metrics reported without requirement mapping."]
+            },
+            "test": {
+              "inputs": ["section_text", "claim_ledger"],
+              "method": "hybrid",
+              "steps": [
+                "Extract requirement identifiers from requirements section.",
+                "Check later sections for explicit mapping statements.",
+                "Classify: missing_mapping, partial_mapping, inconsistent_mapping."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          },
+          {
+            "id": "sys_unjustified_design_choice",
+            "severity": "soft_error",
+            "category": "logic",
+            "definitions": {
+              "what_it_detects": "Design decision asserted without comparing at least one credible alternative.",
+              "why_it_matters": "Unjustified choices hide tradeoffs and prevent reuse in other requirement contexts.",
+              "common_signals": ["Uses 'we chose' without rationale.", "No alternatives section or rejected designs."]
+            },
+            "test": {
+              "inputs": ["section_text"],
+              "method": "heuristic_nlp",
+              "steps": [
+                "Detect decision statements and rationale markers.",
+                "Check for alternative mentions near decision statements.",
+                "Classify: rationale_missing, alternatives_missing, tradeoff_missing."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          },
+          {
+            "id": "sys_unrealistic_workload",
+            "severity": "soft_error",
+            "category": "evidence",
+            "definitions": {
+              "what_it_detects": "Evaluation workloads lack realism or fail to reflect claimed deployment conditions.",
+              "why_it_matters": "Mis-specified workloads inflate performance and mislead readers about practical viability.",
+              "common_signals": ["No workload description.", "Toy datasets used while claiming production readiness."]
+            },
+            "test": {
+              "inputs": ["section_text", "claim_ledger"],
+              "method": "llm_judge",
+              "steps": [
+                "Extract deployment claims and stated operating conditions.",
+                "Judge workload representativeness and realism.",
+                "Classify: workload_missing, workload_toy, workload_mismatch."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          },
+          {
+            "id": "sys_tradeoff_handwaving",
+            "severity": "soft_error",
+            "category": "rhetoric",
+            "definitions": {
+              "what_it_detects": "Tradeoffs described abstractly without concrete measurements or quantified impacts.",
+              "why_it_matters": "Handwaved tradeoffs block design transfer and weaken the paper’s decision rationale.",
+              "common_signals": ["Says 'efficient' without numbers.", "Latency or memory claims lack measured values."]
+            },
+            "test": {
+              "inputs": ["section_text"],
+              "method": "heuristic_nlp",
+              "steps": [
+                "Detect comparative adjectives tied to performance claims.",
+                "Check for nearby quantitative values or tables.",
+                "Classify: unquantified_tradeoff, missing_units, missing_baseline."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "formal_theory_proof",
+      "name": "Formal Theory and Proof Form",
+      "definition": "Argument proceeds by definitions, assumptions, lemmas, theorems, proofs, and implications.",
+      "core_ontology": [
+        {
+          "role": "formal_setup",
+          "definition": "Defines objects, notation, and assumptions with precision sufficient for proof checking."
+        },
+        {
+          "role": "main_results",
+          "definition": "States theorems or propositions as claims with explicit scope and prerequisites."
+        },
+        {
+          "role": "proof_chain",
+          "definition": "Builds results through lemmas and proofs, making dependencies explicit and auditable."
+        },
+        {
+          "role": "implications_examples",
+          "definition": "Interprets results with examples, corollaries, and limitations tied to assumptions."
+        }
+      ],
+      "section_pattern": [
+        { "type": "preliminaries", "required_elements": ["formal_setup", "notation_table"] },
+        { "type": "results", "required_elements": ["main_results", "proof_chain"] },
+        { "type": "examples_or_corollaries", "required_elements": ["implications_examples"] }
+      ],
+      "elements": [
+        { "id": "notation_table", "definition": "Lists symbols and definitions to prevent ambiguity and enable consistent term reuse." }
+      ],
+      "validation": {
+        "required_checks": [
+          "theory_undefined_symbol",
+          "theory_dependency_cycle",
+          "theory_assumption_leak",
+          "theory_proof_gap"
+        ],
+        "rules": [
+          {
+            "id": "theory_undefined_symbol",
+            "severity": "soft_error",
+            "category": "coherence",
+            "definitions": {
+              "what_it_detects": "Symbols or terms used in proofs without definitions in preliminaries or notation table.",
+              "why_it_matters": "Undefined symbols create ambiguity and block verification of proofs and results.",
+              "common_signals": ["New symbol introduced mid-proof.", "Overloaded notation used inconsistently across sections."]
+            },
+            "test": {
+              "inputs": ["doc_text"],
+              "method": "heuristic_nlp",
+              "steps": [
+                "Extract candidate symbols and defined terms.",
+                "Match later usage to earlier definitions.",
+                "Classify: undefined_symbol, inconsistent_definition, overloaded_notation."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          },
+          {
+            "id": "theory_dependency_cycle",
+            "severity": "error",
+            "category": "logic",
+            "definitions": {
+              "what_it_detects": "Lemma or theorem dependencies form a cycle or reference results proved later.",
+              "why_it_matters": "Circular dependency invalidates proof structure and prevents reliable theorem checking.",
+              "common_signals": ["Proof cites later theorem.", "Lemma numbering suggests backward references."]
+            },
+            "test": {
+              "inputs": ["claim_ledger"],
+              "method": "static_check",
+              "steps": [
+                "Build dependency graph among theorem and lemma claims.",
+                "Detect directed cycles or forward references.",
+                "Emit cycle nodes and suggested reordering."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          },
+          {
+            "id": "theory_assumption_leak",
+            "severity": "soft_error",
+            "category": "scope",
+            "definitions": {
+              "what_it_detects": "Conclusions apply beyond assumptions, omitting conditions required for results to hold.",
+              "why_it_matters": "Assumption leakage overstates theorem applicability and misleads downstream use.",
+              "common_signals": ["Drops constraints in corollary discussion.", "Uses universal claims after conditional theorems."]
+            },
+            "test": {
+              "inputs": ["section_text", "claim_ledger"],
+              "method": "llm_judge",
+              "steps": [
+                "Extract assumptions attached to theorem claims.",
+                "Check implication sections for restated conditions.",
+                "Classify: scope_dropped, condition_missing, universality_overreach."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          },
+          {
+            "id": "theory_proof_gap",
+            "severity": "soft_error",
+            "category": "logic",
+            "definitions": {
+              "what_it_detects": "Proof contains inferential leaps without cited lemma, known result, or explicit derivation.",
+              "why_it_matters": "Proof gaps prevent verification and often hide missing assumptions or invalid steps.",
+              "common_signals": ["Uses 'clearly' before a nontrivial step.", "Skips algebraic or logical steps repeatedly."]
+            },
+            "test": {
+              "inputs": ["section_text"],
+              "method": "llm_judge",
+              "steps": [
+                "Identify proof segments and step transitions.",
+                "Judge whether each transition is justified or referenced.",
+                "Classify: missing_justification, missing_reference, nontrivial_step_skipped."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "spec_standard_conformance",
+      "name": "Specification, Standard, and Conformance Form",
+      "definition": "Document defines requirements, normative language, and tests enabling conformance and interoperability.",
+      "core_ontology": [
+        {
+          "role": "terminology",
+          "definition": "Defines terms and normative keywords, ensuring consistent interpretation and legalistic precision."
+        },
+        {
+          "role": "normative_requirements",
+          "definition": "States MUST/SHOULD/MAY requirements with identifiers and unambiguous conditions."
+        },
+        {
+          "role": "conformance_tests",
+          "definition": "Specifies test procedures and expected outcomes that determine compliance."
+        },
+        {
+          "role": "versioning_compatibility",
+          "definition": "Defines version rules, breaking changes, and backward compatibility constraints."
+        }
+      ],
+      "section_pattern": [
+        { "type": "scope_and_terms", "required_elements": ["terminology", "scope_conditions"] },
+        { "type": "requirements", "required_elements": ["normative_requirements", "requirements_numbering_scheme"] },
+        { "type": "conformance", "required_elements": ["conformance_tests", "error_conditions"] },
+        { "type": "versioning", "required_elements": ["versioning_compatibility", "migration_guidance"] }
+      ],
+      "elements": [
+        { "id": "requirements_numbering_scheme", "definition": "Assigns stable IDs to requirements to support citations, tests, and change tracking." },
+        { "id": "error_conditions", "definition": "Enumerates failure cases and expected error outputs to prevent ambiguous implementations." },
+        { "id": "migration_guidance", "definition": "Explains how to upgrade from prior versions, including mapping old behaviors to new ones." }
+      ],
+      "validation": {
+        "required_checks": [
+          "spec_ambiguous_requirement",
+          "spec_unverifiable_test",
+          "spec_term_inconsistency",
+          "spec_backward_compatibility_gap"
+        ],
+        "rules": [
+          {
+            "id": "spec_ambiguous_requirement",
+            "severity": "soft_error",
+            "category": "rhetoric",
+            "definitions": {
+              "what_it_detects": "Normative requirement uses vague language or lacks conditions, identifiers, or measurable criteria.",
+              "why_it_matters": "Ambiguity yields incompatible implementations and undermines interoperability and conformance.",
+              "common_signals": ["Uses 'fast' or 'secure' without definition.", "Requirement lacks MUST/SHOULD keyword or ID."]
+            },
+            "test": {
+              "inputs": ["section_text"],
+              "method": "heuristic_nlp",
+              "steps": [
+                "Locate normative keywords and requirement statements.",
+                "Check for requirement IDs and measurable conditions.",
+                "Classify: vague_term, missing_condition, missing_id."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          },
+          {
+            "id": "spec_unverifiable_test",
+            "severity": "soft_error",
+            "category": "evidence",
+            "definitions": {
+              "what_it_detects": "Conformance test lacks deterministic procedure, inputs, or expected outputs with tolerance.",
+              "why_it_matters": "Unverifiable tests cannot certify compliance and invite incompatible interpretations.",
+              "common_signals": ["Test says 'behaves correctly' without outputs.", "No tolerance bounds for numeric comparisons."]
+            },
+            "test": {
+              "inputs": ["section_text"],
+              "method": "llm_judge",
+              "steps": [
+                "Extract conformance test descriptions.",
+                "Judge whether inputs, procedure, and outputs are specified.",
+                "Classify: missing_inputs, missing_expected_output, missing_tolerance."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          },
+          {
+            "id": "spec_term_inconsistency",
+            "severity": "soft_error",
+            "category": "coherence",
+            "definitions": {
+              "what_it_detects": "Same term used with different meanings, or different terms used for the same concept.",
+              "why_it_matters": "Term inconsistency creates divergent implementations and confuses requirement applicability.",
+              "common_signals": ["Term defined once but used differently later.", "Synonym drift across sections."]
+            },
+            "test": {
+              "inputs": ["doc_text"],
+              "method": "hybrid",
+              "steps": [
+                "Extract defined terms and their definitions.",
+                "Detect later usage patterns that conflict with definitions.",
+                "Classify: definition_conflict, synonym_drift, overloaded_term."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          },
+          {
+            "id": "spec_backward_compatibility_gap",
+            "severity": "soft_error",
+            "category": "scope",
+            "definitions": {
+              "what_it_detects": "Versioning section omits breaking changes, deprecation policy, or migration mapping.",
+              "why_it_matters": "Compatibility gaps impose hidden costs and reduce adoption of the standard or spec.",
+              "common_signals": ["New version declared without listing breaking changes.", "No migration guidance for deprecated features."]
+            },
+            "test": {
+              "inputs": ["section_text"],
+              "method": "static_check",
+              "steps": [
+                "Verify presence of version rules and migration guidance elements.",
+                "Scan for explicit breaking change markers and deprecation policy.",
+                "Emit findings for missing required compatibility components."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "survey_taxonomy_open_problems",
+      "name": "Survey, Taxonomy, and Open Problems Form",
+      "definition": "Field mapping argument that classifies approaches, evaluates evidence, and identifies research gaps.",
+      "core_ontology": [
+        {
+          "role": "field_boundary",
+          "definition": "Defines inclusion rules and corpus boundaries to prevent arbitrary or incomplete coverage."
+        },
+        {
+          "role": "taxonomy",
+          "definition": "Organizes approaches into categories with discriminating criteria and representative exemplars."
+        },
+        {
+          "role": "evidence_audit",
+          "definition": "Assesses strength of evidence per category, noting benchmarks, reproducibility, and assumptions."
+        },
+        {
+          "role": "gap_and_agenda",
+          "definition": "Identifies unresolved problems and proposes research directions grounded in the audit."
+        }
+      ],
+      "section_pattern": [
+        { "type": "scope", "required_elements": ["field_boundary", "search_strategy"] },
+        { "type": "taxonomy", "required_elements": ["taxonomy", "category_definitions", "exemplar_table"] },
+        { "type": "evaluation", "required_elements": ["evidence_audit", "benchmark_map", "reproducibility_notes"] },
+        { "type": "open_problems", "required_elements": ["gap_and_agenda", "prioritized_questions"] }
+      ],
+      "elements": [
+        { "id": "search_strategy", "definition": "Documents how the literature set was found, filtered, and updated over time." },
+        { "id": "category_definitions", "definition": "Defines category criteria so papers can be assigned consistently by agents." },
+        { "id": "exemplar_table", "definition": "Lists representative works per category with key claims, datasets, metrics, and artifacts." },
+        { "id": "benchmark_map", "definition": "Maps evaluation datasets and metrics to categories to expose incomparable evidence regimes." },
+        { "id": "reproducibility_notes", "definition": "Records artifact availability, replication status, and known pitfalls for each exemplar." },
+        { "id": "prioritized_questions", "definition": "Ranks open problems by impact, tractability, and dependency structure across subfields." }
+      ],
+      "validation": {
+        "required_checks": [
+          "survey_boundary_ambiguity",
+          "survey_taxonomy_overlap",
+          "survey_incommensurable_comparisons",
+          "survey_gap_from_anecdote"
+        ],
+        "rules": [
+          {
+            "id": "survey_boundary_ambiguity",
+            "severity": "soft_error",
+            "category": "coverage",
+            "definitions": {
+              "what_it_detects": "Scope and inclusion rules unclear, causing arbitrary omissions or unjustified coverage claims.",
+              "why_it_matters": "Unclear boundaries prevent readers from trusting completeness and interpreting missing areas.",
+              "common_signals": ["Says 'comprehensive' without method.", "No inclusion criteria or time window specified."]
+            },
+            "test": {
+              "inputs": ["section_text"],
+              "method": "llm_judge",
+              "steps": [
+                "Extract claims about completeness and scope.",
+                "Judge whether inclusion rules and search strategy are specified.",
+                "Classify: missing_inclusion_rules, missing_time_window, completeness_overclaim."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          },
+          {
+            "id": "survey_taxonomy_overlap",
+            "severity": "soft_error",
+            "category": "logic",
+            "definitions": {
+              "what_it_detects": "Taxonomy categories overlap without rules, causing inconsistent assignment and blurred distinctions.",
+              "why_it_matters": "Overlapping categories weaken synthesis and block reliable comparison across approaches.",
+              "common_signals": ["Same paper fits multiple categories.", "Category definitions reuse each other’s criteria."]
+            },
+            "test": {
+              "inputs": ["section_text", "claim_ledger"],
+              "method": "hybrid",
+              "steps": [
+                "Extract category criteria from category_definitions.",
+                "Check for discriminating attributes and mutual exclusivity rules.",
+                "Classify: overlap_unresolved, criteria_duplicated, assignment_rule_missing."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          },
+          {
+            "id": "survey_incommensurable_comparisons",
+            "severity": "soft_error",
+            "category": "logic",
+            "definitions": {
+              "what_it_detects": "Compares methods across incomparable benchmarks or metrics without normalization or caveats.",
+              "why_it_matters": "Incommensurable comparisons create misleading rankings and distort field understanding.",
+              "common_signals": ["Claims superiority across different datasets.", "Mixes metrics without explaining conversion or tradeoffs."]
+            },
+            "test": {
+              "inputs": ["section_text"],
+              "method": "heuristic_nlp",
+              "steps": [
+                "Detect comparative claims and method rankings.",
+                "Check for shared benchmark references or normalization statements.",
+                "Classify: benchmark_mismatch, metric_mismatch, normalization_missing."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          },
+          {
+            "id": "survey_gap_from_anecdote",
+            "severity": "soft_error",
+            "category": "rhetoric",
+            "definitions": {
+              "what_it_detects": "Open problems asserted from anecdote rather than derived from the evidence audit.",
+              "why_it_matters": "Agenda setting should follow documented weaknesses, not author preference or fashion.",
+              "common_signals": ["Open problems section lacks citations.", "Problems do not reference audited limitations."]
+            },
+            "test": {
+              "inputs": ["section_text", "reference_catalog"],
+              "method": "hybrid",
+              "steps": [
+                "Extract open problem statements.",
+                "Check for citations and links back to evidence_audit findings.",
+                "Classify: uncited_gap, audit_disconnect, fashion_claim."
+              ],
+              "outputs": { "pass": true, "score_0_1": 0.0, "findings": [] }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "agent_roles": {
+    "retrieval_agent": {
+      "definition": "Retrieves candidate sources, artifacts, and runs to populate evidence objects for target claims.",
+      "prompt": "Given section_id, target_claims, and allowed reference sets, propose Evidence objects with relation labels and locators. Prefer primary benchmarks, repos, specs, and canonical baselines. Return top candidates with rationales."
+    },
+    "claim_agent": {
+      "definition": "Proposes atomic technical claims with scope, dependencies, and minimal evidence links.",
+      "prompt": "Propose 5-12 Claim objects for section_id as assertive statements with scope and dependencies. Attach 1-3 Evidence links per claim, including contradicts or complicates when present. Avoid vague improvement claims without metrics."
+    },
+    "methods_agent": {
+      "definition": "Writes replicable method specifications and ensures artifacts and run logs support reproduction.",
+      "prompt": "Write method_spec and artifact_manifest. Include parameters, datasets, evaluation protocol, and environment. Add Artifact objects with hashes and build steps. Add ExperimentRun schema expectations for metrics and configs."
+    },
+    "evaluation_agent": {
+      "definition": "Designs benchmarks, selects baselines, and structures ablation and sensitivity analyses.",
+      "prompt": "Given contribution_claim and evaluation_criterion, propose benchmark_design, baselines, and ablation_or_sensitivity plan. Ensure fair comparisons and report expected metrics, units, and uncertainty handling."
+    },
+    "validator_agent": {
+      "definition": "Runs validation rules, returns hard failures, soft errors, and rhetorical breakdown classifications.",
+      "prompt": "Validate doc_text and ledger objects against functional_form validation rules. Output ValidationReport listing errors and soft_errors with classifications and minimal suggested fixes. Prefer localized edits and manifest patches."
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "kg_update": {
+    "embedding": {
+      "provider": "local",
+      "dimensions": 256,
+      "timeout_seconds": 20.0
+    },
+    "vector_db_path": "build/tutorial_vectors_local.json",
+    "rag_top_k": 3,
+    "similarity_threshold": 0.2,
+    "max_entities_per_doc": 8
+  }
+}

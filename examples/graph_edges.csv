@@ -1,0 +1,4 @@
+source,target,predicate
+Knowledge Graph,Claim,supports
+Retrieval-Augmented Generation,Citation,improves
+Multi-agent System,Claim,organizes

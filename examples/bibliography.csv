@@ -1,0 +1,4 @@
+id,title,authors,publication,year,abstract
+src-01,Knowledge Graphs for Scholarly Writing,"A. Researcher;B. Collaborator",Journal of Graph Studies,2022,"Knowledge graphs provide explicit structure for entities and relations in scientific narratives."
+src-02,Retrieval-Augmented Generation in Practice,"B. Engineer",AI Systems Journal,2023,"Retrieval-augmented generation grounds outputs in external evidence."
+src-03,Cooperative Agent Workflows,"C. Architect",Agent Systems Review,2024,"Multi-agent systems can separate drafting, critique, and revision duties."
