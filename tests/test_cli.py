@@ -83,6 +83,22 @@ class CLITests(unittest.TestCase):
         self.assertTrue(args.enable_outline_expander)
         self.assertEqual(args.outline_max_subsections, 4)
 
+    def test_parser_accepts_upload_runtime_flags(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(
+            [
+                "--artifacts-dir",
+                "uploads",
+                "--runtime",
+                "claude-code",
+                "--output",
+                "build/out.md",
+            ]
+        )
+
+        self.assertEqual(args.artifacts_dir, "uploads")
+        self.assertEqual(args.runtime, "claude-code")
+
     def test_parser_accepts_soft_validation_flags(self) -> None:
         parser = build_parser()
         args = parser.parse_args(

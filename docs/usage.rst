@@ -49,6 +49,8 @@ CLI arguments
 - ``--bibliography-format``: ``auto`` (default), ``json``, ``csv``, or ``bibtex``.
 - ``--outline``: outline JSON with ``chapters`` and ``sections``.
 - ``--prompts``: optional prompt templates JSON.
+- ``--runtime``: runtime target for input resolution (``local`` default, ``codex``, ``claude_code``/``claude-code``).
+- ``--artifacts-dir``: optional directory containing uploaded artifacts; missing bibliography/outline/graph/prompts paths are auto-discovered.
 - ``--llm-config``: optional LLM config JSON.
 - ``--llm-provider``: ``none``, ``openai``, ``codex``, ``openai_compatible``, ``anthropic``, ``claude``, ``github``, ``copilot``.
 - ``--llm-model``: model name for API calls.
@@ -114,6 +116,24 @@ CLI arguments
 - ``--outline-expansion-report``: optional JSON payload containing expanded outline + prompts + diagnostics.
 - ``--expanded-outline-output``: optional JSON output containing the expanded ``chapters``.
 - ``--expanded-prompts-output``: optional JSON output containing generated ``prompts``.
+
+Codex/Claude Code upload workflow
+---------------------------------
+
+If a user uploads bibliography, outline, graph, and prompts files into a workspace folder, run with upload-aware
+artifact discovery instead of passing every file path explicitly:
+
+.. code-block:: bash
+
+   colophon \
+     --runtime codex \
+     --artifacts-dir uploads \
+     --output build/manuscript.md \
+     --report build/diagnostics.json \
+     --title "Upload Bundle Draft"
+
+For Claude Code, use ``--runtime claude-code`` (or ``claude_code``). Explicit flags such as ``--bibliography`` and
+``--graph`` still override discovered upload files when both are provided.
 
 Graph formats
 -------------

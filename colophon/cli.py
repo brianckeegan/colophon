@@ -17,6 +17,7 @@ from .io import (
     load_outline,
     load_prompts,
     load_recommendation_config,
+    resolve_input_artifacts,
     write_text,
 )
 from .kg_update import KGUpdateConfig
@@ -43,17 +44,40 @@ def build_parser() -> argparse.ArgumentParser:
         Return value description.
     """
     parser = argparse.ArgumentParser(description="Generate long-form drafts with Colophon.")
-    parser.add_argument("--bibliography", required=True, help="Path to bibliography input file.")
+    parser.add_argument(
+        "--bibliography",
+        default="",
+        help="Path to bibliography input file. Optional when --artifacts-dir is used.",
+    )
     parser.add_argument(
         "--bibliography-format",
         default="auto",
         choices=("auto", "json", "csv", "bibtex"),
         help="Bibliography input format. Defaults to auto-detect from extension.",
     )
-    parser.add_argument("--outline", required=True, help="Path to outline JSON file.")
+    parser.add_argument(
+        "--outline",
+        default="",
+        help="Path to outline JSON file. Optional when --artifacts-dir is used.",
+    )
     parser.add_argument(
         "--prompts",
+        default="",
         help="Optional prompts JSON file for template overrides (claim/paragraph/empty section).",
+    )
+    parser.add_argument(
+        "--runtime",
+        default="local",
+        choices=("local", "codex", "claude_code", "claude-code"),
+        help="Execution runtime target. Codex/Claude Code modes enable upload-aware artifact discovery.",
+    )
+    parser.add_argument(
+        "--artifacts-dir",
+        default="",
+        help=(
+            "Optional root directory containing uploaded inputs. "
+            "When set, missing bibliography/outline/graph/prompts paths are auto-discovered."
+        ),
     )
     parser.add_argument("--llm-config", help="Optional LLM config JSON file.")
     parser.add_argument(
@@ -70,7 +94,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--llm-timeout-seconds", type=float, help="HTTP timeout for each LLM API request.")
     parser.add_argument(
         "--graph",
-        required=True,
+        default="",
         help="Path to seed knowledge graph input (JSON, CSV edgelist, SQLite DB, or SQL dump).",
     )
     parser.add_argument(
@@ -346,10 +370,25 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    bibliography = load_bibliography_with_format(args.bibliography, bibliography_format=args.bibliography_format)
-    outline = load_outline(args.outline)
-    graph = load_graph(args.graph, graph_format=args.graph_format)
-    prompts = load_prompts(args.prompts) if args.prompts else {}
+    try:
+        artifacts = resolve_input_artifacts(
+            bibliography=args.bibliography,
+            bibliography_format=args.bibliography_format,
+            outline=args.outline,
+            graph=args.graph,
+            graph_format=args.graph_format,
+            prompts=args.prompts,
+            artifacts_dir=args.artifacts_dir,
+            runtime=args.runtime,
+        )
+    except ValueError as exc:
+        parser.error(str(exc))
+        return 2
+
+    bibliography = load_bibliography_with_format(artifacts.bibliography, bibliography_format=artifacts.bibliography_format)
+    outline = load_outline(artifacts.outline)
+    graph = load_graph(artifacts.graph, graph_format=artifacts.graph_format)
+    prompts = load_prompts(artifacts.prompts) if artifacts.prompts else {}
     llm_config = _resolve_llm_config(args)
     llm_client = create_llm_client(llm_config)
     recommendation_config = _resolve_recommendation_config(args)
@@ -428,6 +467,16 @@ def main(argv: list[str] | None = None) -> int:
         )
     )
     manuscript = pipeline.run(bibliography=bibliography, outline=outline, graph=graph)
+    manuscript.diagnostics["runtime"] = artifacts.runtime
+    manuscript.diagnostics["input_artifacts"] = {
+        "artifacts_dir": artifacts.artifacts_dir,
+        "bibliography": artifacts.bibliography,
+        "bibliography_format": artifacts.bibliography_format,
+        "outline": artifacts.outline,
+        "graph": artifacts.graph,
+        "graph_format": artifacts.graph_format,
+        "prompts": artifacts.prompts,
+    }
 
     output_format = _resolve_output_format(args.output_format, args.output)
     output_layout = _resolve_output_layout(args.output_layout)

@@ -51,6 +51,17 @@ colophon \
   --title "Colophon Demo Draft"
 ```
 
+Upload-first workflow (Codex or Claude Code):
+
+```bash
+colophon \
+  --runtime codex \
+  --artifacts-dir uploads \
+  --output build/manuscript.md \
+  --report build/diagnostics.json \
+  --title "Uploaded Bundle Draft"
+```
+
 ## Get involved
 
 Contributions are welcome. You can help by opening issues, proposing features from your writing workflow, improving docs/examples, or submitting pull requests for bug fixes and new capabilities. If you want to start small, check the roadmap and docs pages above, then suggest an improvement you would like to use.

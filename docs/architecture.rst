@@ -31,7 +31,8 @@ Core components
 
 - ``colophon.models``: manuscript and evidence data model.
 - ``colophon.graph``: seed knowledge graph representation and query-time entity matching.
-- ``colophon.io``: bibliography ingestion (JSON/CSV/BibTeX) and graph ingestion (JSON/CSV/SQLite/SQL).
+- ``colophon.io``: bibliography ingestion (JSON/CSV/BibTeX), graph ingestion (JSON/CSV/SQLite/SQL), and upload-aware
+  artifact resolution for Codex/Claude Code runtimes.
 - ``colophon.coordination``: message bus and hierarchical coordination/editing agents.
 - ``colophon.llm``: provider-agnostic LLM client hooks and adapters.
 - ``colophon.vectors``: local or OpenAI-compatible embedding clients and in-memory vector DB.
@@ -50,7 +51,8 @@ Core components
 Data flow
 ---------
 
-1. Load bibliography, outline, and seed knowledge graph.
+1. Resolve input artifact paths from explicit CLI flags or upload-aware directory discovery
+   (``--artifacts-dir`` + ``--runtime`` for Codex/Claude Code), then load bibliography, outline, and seed knowledge graph.
 2. Optional outline expander enriches draft outline chapters and generates prompt templates.
 3. Optional KG updater embeds bibliography records (title/abstract/authors/publication), builds a vector index, performs similarity retrieval, and adds/revises KG entities/relations.
 4. Chapter/section coordinators send guidance messages to child drafting agents.

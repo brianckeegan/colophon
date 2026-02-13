@@ -6,6 +6,7 @@ import csv
 import json
 import re
 import sqlite3
+from dataclasses import dataclass
 from pathlib import Path
 
 from .graph import KnowledgeGraph, graph_from_dict
@@ -14,6 +15,89 @@ from .vectors import EmbeddingConfig
 from .llm import LLMConfig
 from .models import Figure, Source
 from .recommendations import RecommendationConfig
+
+
+@dataclass(slots=True)
+class InputArtifacts:
+    """Resolved input artifact paths for a single pipeline run.
+
+    Parameters
+    ----------
+    runtime : str
+        Runtime target (for example ``local``, ``codex``, or ``claude_code``).
+    artifacts_dir : str
+        Root directory used for upload-aware artifact discovery.
+    bibliography : str
+        Bibliography file path.
+    bibliography_format : str
+        Resolved bibliography format.
+    outline : str
+        Outline JSON file path.
+    graph : str
+        Knowledge graph file path.
+    graph_format : str
+        Resolved graph format.
+    prompts : str
+        Prompt-template file path, or empty string when not provided/discovered.
+    """
+
+    runtime: str
+    artifacts_dir: str
+    bibliography: str
+    bibliography_format: str
+    outline: str
+    graph: str
+    graph_format: str
+    prompts: str = ""
+
+
+_UPLOAD_DIR_HINTS = ("uploads", "upload", "artifacts", "input", "inputs")
+_ARTIFACT_FILENAME_HINTS: dict[str, tuple[str, ...]] = {
+    "bibliography": (
+        "bibliography.json",
+        "bibliography.csv",
+        "bibliography.bib",
+        "bibliography.bibtex",
+        "references.bib",
+        "references.bibtex",
+        "references.json",
+        "sources.json",
+        "sources.csv",
+    ),
+    "outline": (
+        "outline.json",
+        "chapter_outline.json",
+        "manuscript_outline.json",
+    ),
+    "graph": (
+        "seed_graph.json",
+        "knowledge_graph.json",
+        "knowledge-graph.json",
+        "graph.json",
+        "graph.csv",
+        "graph.sqlite",
+        "graph.db",
+        "graph.sql",
+    ),
+    "prompts": (
+        "prompts.json",
+        "prompt_bundle.json",
+        "prompt_templates.json",
+        "templates.json",
+    ),
+}
+_ARTIFACT_EXTENSION_HINTS: dict[str, tuple[str, ...]] = {
+    "bibliography": (".json", ".csv", ".bib", ".bibtex"),
+    "outline": (".json",),
+    "graph": (".json", ".csv", ".sqlite", ".db", ".sql"),
+    "prompts": (".json",),
+}
+_ARTIFACT_TOKEN_HINTS: dict[str, tuple[str, ...]] = {
+    "bibliography": ("bibliography", "reference", "references", "citation", "citations", "source", "sources"),
+    "outline": ("outline", "chapter", "chapters", "structure"),
+    "graph": ("knowledge_graph", "knowledge-graph", "graph", "kg"),
+    "prompts": ("prompt", "prompts", "template", "templates"),
+}
 
 
 def load_json(path: str | Path) -> dict:
@@ -246,6 +330,95 @@ def load_prompts(path: str | Path) -> dict[str, str]:
     return normalized
 
 
+def resolve_input_artifacts(
+    bibliography: str,
+    bibliography_format: str,
+    outline: str,
+    graph: str,
+    graph_format: str,
+    prompts: str = "",
+    artifacts_dir: str = "",
+    runtime: str = "local",
+) -> InputArtifacts:
+    """Resolve required pipeline input artifacts.
+
+    This resolver supports two modes:
+    - explicit path mode via ``--bibliography``, ``--outline``, ``--graph``, ``--prompts``
+    - upload-aware discovery mode via ``--artifacts-dir`` (used by Codex/Claude Code runs)
+
+    Parameters
+    ----------
+    bibliography : str
+        Explicit bibliography path, if provided.
+    bibliography_format : str
+        Bibliography format hint.
+    outline : str
+        Explicit outline path, if provided.
+    graph : str
+        Explicit graph path, if provided.
+    graph_format : str
+        Graph format hint.
+    prompts : str
+        Explicit prompts path, if provided.
+    artifacts_dir : str
+        Root directory containing uploaded artifacts.
+    runtime : str
+        Runtime target string used for defaults and diagnostics.
+
+    Returns
+    -------
+    InputArtifacts
+        Resolved artifact paths and inferred formats.
+    """
+    resolved_runtime = _normalize_runtime(runtime)
+    discovery_root = _resolve_artifacts_root(artifacts_dir=artifacts_dir, runtime=resolved_runtime)
+
+    bibliography_path = _resolve_artifact_path(
+        explicit_path=bibliography,
+        artifacts_root=discovery_root,
+        required=True,
+        artifact_name="bibliography",
+    )
+    outline_path = _resolve_artifact_path(
+        explicit_path=outline,
+        artifacts_root=discovery_root,
+        required=True,
+        artifact_name="outline",
+    )
+    graph_path = _resolve_artifact_path(
+        explicit_path=graph,
+        artifacts_root=discovery_root,
+        required=True,
+        artifact_name="graph",
+    )
+    prompts_path = _resolve_artifact_path(
+        explicit_path=prompts,
+        artifacts_root=discovery_root,
+        required=False,
+        artifact_name="prompts",
+    )
+
+    resolved_bibliography_format = _resolve_bibliography_format(
+        path=bibliography_path,
+        bibliography_format=bibliography_format,
+    )
+    resolved_graph_format = _resolve_graph_format(
+        graph_path=graph_path,
+        graph_format=graph_format,
+    )
+
+    return InputArtifacts(
+        runtime=resolved_runtime,
+        artifacts_dir=str(discovery_root) if discovery_root is not None else "",
+        bibliography=str(bibliography_path),
+        bibliography_format=resolved_bibliography_format,
+        outline=str(outline_path),
+        graph=str(graph_path),
+        graph_format=resolved_graph_format,
+        prompts=str(prompts_path) if prompts_path is not None else "",
+    )
+
+
 def load_llm_config(path: str | Path) -> LLMConfig:
     """Load llm config.
 
@@ -379,6 +552,129 @@ def load_graph(path: str | Path, graph_format: str = "auto") -> KnowledgeGraph:
         return _load_graph_from_sqlite(graph_path, is_sql_dump=resolved_format == "sql")
 
     raise ValueError(f"Unsupported graph format: {resolved_format}")
+
+
+def _normalize_runtime(runtime: str) -> str:
+    """Normalize runtime labels used by upload-aware resolution."""
+    normalized = runtime.strip().lower().replace("-", "_")
+    if normalized in {"", "default"}:
+        return "local"
+    if normalized in {"claude", "claude_code"}:
+        return "claude_code"
+    if normalized in {"openai_codex"}:
+        return "codex"
+    return normalized
+
+
+def _resolve_artifacts_root(artifacts_dir: str, runtime: str) -> Path | None:
+    """Resolve discovery root for uploaded artifact files."""
+    candidate = artifacts_dir.strip()
+    if not candidate and runtime in {"codex", "claude_code"}:
+        candidate = "."
+    if not candidate:
+        return None
+
+    root = Path(candidate).expanduser()
+    if not root.exists():
+        raise ValueError(f"Artifact directory does not exist: {root}")
+    if not root.is_dir():
+        raise ValueError(f"Artifact directory is not a directory: {root}")
+    return root
+
+
+def _resolve_artifact_path(
+    explicit_path: str,
+    artifacts_root: Path | None,
+    required: bool,
+    artifact_name: str,
+) -> Path | None:
+    """Resolve an artifact path from explicit CLI args or directory discovery."""
+    value = explicit_path.strip()
+    if value:
+        path = Path(value).expanduser()
+        if not path.exists():
+            raise ValueError(f"{artifact_name.capitalize()} file does not exist: {path}")
+        if not path.is_file():
+            raise ValueError(f"{artifact_name.capitalize()} path is not a file: {path}")
+        return path
+
+    discovered = _discover_artifact_path(artifacts_root=artifacts_root, artifact_name=artifact_name)
+    if discovered is not None:
+        return discovered
+
+    if required:
+        if artifacts_root is not None:
+            raise ValueError(
+                f"Could not resolve {artifact_name} in {artifacts_root}. "
+                f"Provide --{artifact_name} explicitly or upload a matching file."
+            )
+        raise ValueError(
+            f"Missing required --{artifact_name}. "
+            "Provide explicit paths or pass --artifacts-dir with uploaded inputs."
+        )
+    return None
+
+
+def _discover_artifact_path(artifacts_root: Path | None, artifact_name: str) -> Path | None:
+    """Discover an artifact path from common upload directories and filename hints."""
+    if artifacts_root is None:
+        return None
+
+    search_roots = _candidate_artifact_roots(artifacts_root)
+    direct_match = _discover_by_filename_hint(search_roots=search_roots, artifact_name=artifact_name)
+    if direct_match is not None:
+        return direct_match
+
+    return _discover_by_token_hint(search_roots=search_roots, artifact_name=artifact_name)
+
+
+def _candidate_artifact_roots(artifacts_root: Path) -> list[Path]:
+    """Return concrete directories searched for upload-style artifact files."""
+    roots = [artifacts_root]
+    for hint in _UPLOAD_DIR_HINTS:
+        candidate = artifacts_root / hint
+        if candidate.exists() and candidate.is_dir():
+            roots.append(candidate)
+    return roots
+
+
+def _discover_by_filename_hint(search_roots: list[Path], artifact_name: str) -> Path | None:
+    """Find first direct filename match for an artifact type."""
+    for filename in _ARTIFACT_FILENAME_HINTS.get(artifact_name, ()):
+        for root in search_roots:
+            candidate = root / filename
+            if candidate.exists() and candidate.is_file():
+                return candidate
+    return None
+
+
+def _discover_by_token_hint(search_roots: list[Path], artifact_name: str) -> Path | None:
+    """Find artifact by loose token matching when canonical filenames are absent."""
+    tokens = _ARTIFACT_TOKEN_HINTS.get(artifact_name, ())
+    suffixes = _ARTIFACT_EXTENSION_HINTS.get(artifact_name, ())
+    matches: list[Path] = []
+
+    for root in search_roots:
+        for candidate in sorted(root.iterdir()):
+            if not candidate.is_file():
+                continue
+            if candidate.suffix.lower() not in suffixes:
+                continue
+            lowered = candidate.stem.lower()
+            if any(token in lowered for token in tokens):
+                matches.append(candidate)
+
+    if len(matches) == 1:
+        return matches[0]
+    if len(matches) > 1:
+        rendered = ", ".join(str(path) for path in matches[:4])
+        if len(matches) > 4:
+            rendered += ", ..."
+        raise ValueError(
+            f"Ambiguous {artifact_name} discovery in uploaded artifacts. "
+            f"Provide --{artifact_name} explicitly. Candidates: {rendered}"
+        )
+    return None
 
 
 def write_text(path: str | Path, content: str) -> None:

@@ -19,6 +19,7 @@ from .writing_ontology import (
     run_writing_ontology_validation,
 )
 from .note_import import NotesImportConfig, NotesImportResult, NotesKnowledgeGraphImporter
+from .io import InputArtifacts, resolve_input_artifacts
 from .models import (
     Chapter,
     Claim,
@@ -56,6 +57,7 @@ __all__ = [
     "Figure",
     "GapRequest",
     "InMemoryVectorDB",
+    "InputArtifacts",
     "KGUpdateConfig",
     "KnowledgeGraphGeneratorUpdater",
     "LLMConfig",
@@ -86,6 +88,7 @@ __all__ = [
     "build_genre_ontology_context",
     "create_llm_client",
     "run_writing_ontology_validation",
+    "resolve_input_artifacts",
     "run_soft_validation",
     "select_functional_form",
     "WritingOntologyValidationFinding",

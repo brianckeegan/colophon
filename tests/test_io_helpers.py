@@ -12,6 +12,7 @@ from colophon.io import (
     load_outline,
     load_prompts,
     load_recommendation_config,
+    resolve_input_artifacts,
     write_text,
 )
 
@@ -151,6 +152,89 @@ class IOHelperTests(unittest.TestCase):
             write_text(output_path, "hello")
 
             self.assertEqual(output_path.read_text(encoding="utf-8"), "hello")
+
+    def test_resolve_input_artifacts_uses_explicit_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            base = Path(tmp_dir)
+            bibliography_path = base / "refs.csv"
+            outline_path = base / "outline_payload.json"
+            graph_path = base / "kg.sqlite"
+            prompts_path = base / "prompt_bundle.json"
+
+            bibliography_path.write_text("id,title\ns1,Paper\n", encoding="utf-8")
+            outline_path.write_text(json.dumps({"chapters": []}), encoding="utf-8")
+            graph_path.write_text("", encoding="utf-8")
+            prompts_path.write_text(json.dumps({"prompts": {}}), encoding="utf-8")
+
+            resolved = resolve_input_artifacts(
+                bibliography=str(bibliography_path),
+                bibliography_format="auto",
+                outline=str(outline_path),
+                graph=str(graph_path),
+                graph_format="auto",
+                prompts=str(prompts_path),
+                artifacts_dir="",
+                runtime="local",
+            )
+
+            self.assertEqual(resolved.bibliography, str(bibliography_path))
+            self.assertEqual(resolved.bibliography_format, "csv")
+            self.assertEqual(resolved.outline, str(outline_path))
+            self.assertEqual(resolved.graph, str(graph_path))
+            self.assertEqual(resolved.graph_format, "sqlite")
+            self.assertEqual(resolved.prompts, str(prompts_path))
+
+    def test_resolve_input_artifacts_discovers_uploaded_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            uploads = Path(tmp_dir) / "uploads"
+            uploads.mkdir(parents=True, exist_ok=True)
+
+            bibliography_path = uploads / "project_bibliography.json"
+            outline_path = uploads / "project_outline.json"
+            graph_path = uploads / "knowledge_graph.json"
+            prompts_path = uploads / "prompts.json"
+
+            bibliography_path.write_text(json.dumps({"sources": []}), encoding="utf-8")
+            outline_path.write_text(json.dumps({"chapters": []}), encoding="utf-8")
+            graph_path.write_text(json.dumps({"entities": [], "relations": []}), encoding="utf-8")
+            prompts_path.write_text(json.dumps({"prompts": {"claim_template": "x"}}), encoding="utf-8")
+
+            resolved = resolve_input_artifacts(
+                bibliography="",
+                bibliography_format="auto",
+                outline="",
+                graph="",
+                graph_format="auto",
+                prompts="",
+                artifacts_dir=tmp_dir,
+                runtime="codex",
+            )
+
+            self.assertEqual(resolved.runtime, "codex")
+            self.assertEqual(resolved.artifacts_dir, tmp_dir)
+            self.assertEqual(resolved.bibliography, str(bibliography_path))
+            self.assertEqual(resolved.outline, str(outline_path))
+            self.assertEqual(resolved.graph, str(graph_path))
+            self.assertEqual(resolved.prompts, str(prompts_path))
+
+    def test_resolve_input_artifacts_raises_when_required_upload_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            uploads = Path(tmp_dir) / "uploads"
+            uploads.mkdir(parents=True, exist_ok=True)
+            (uploads / "bibliography.json").write_text(json.dumps({"sources": []}), encoding="utf-8")
+            (uploads / "graph.json").write_text(json.dumps({"entities": [], "relations": []}), encoding="utf-8")
+
+            with self.assertRaises(ValueError):
+                resolve_input_artifacts(
+                    bibliography="",
+                    bibliography_format="auto",
+                    outline="",
+                    graph="",
+                    graph_format="auto",
+                    prompts="",
+                    artifacts_dir=tmp_dir,
+                    runtime="claude-code",
+                )
 
     def test_load_graph_auto_raises_for_unknown_extension(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
