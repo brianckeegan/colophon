@@ -8,6 +8,7 @@ Colophon is a cooperative multi-agent long-form writing system that combines kno
    :caption: Contents
 
    getting_started
+   user_guide
    upload_tutorial
    examples
    architecture

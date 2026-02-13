@@ -17,6 +17,24 @@ This tutorial walks through a minimum viable end-to-end run using:
 - hierarchical coordination/editing agents with message passing
 - optional related-paper recommendation proposals
 
+Starting from only a PDF
+------------------------
+
+If your starting point is a single PDF, first deconstruct it into Colophon inputs:
+
+.. code-block:: bash
+
+   colophon deconstruct test.pdf
+
+This command creates:
+
+- ``test_bibliography.json``
+- ``test_kg.json``
+- ``test_outline.json``
+- ``test_prompts.json``
+
+You can feed those files directly into the main generation CLI (shown later in this tutorial).
+
 If you specifically want an upload-first run from an empty Claude Code/Codex workspace,
 use the stand-alone guide: :doc:`upload_tutorial`.
 

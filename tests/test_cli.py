@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+import unittest.mock
 from argparse import Namespace
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
@@ -244,6 +245,25 @@ class CLITests(unittest.TestCase):
         )
 
         self.assertEqual(args.coordination_max_iterations, 6)
+
+
+    def test_main_dispatches_deconstruct_command(self) -> None:
+        from colophon.cli import main
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            pdf_path = Path(tmp_dir) / "sample.pdf"
+            pdf_path.write_bytes(b"%PDF-1.4\n%mock\n")
+            with unittest.mock.patch("colophon.cli.run_deconstruct") as mock_run:
+                mock_run.return_value = unittest.mock.Mock(
+                    bibliography_path=Path(tmp_dir) / "b.json",
+                    knowledge_graph_path=Path(tmp_dir) / "k.json",
+                    outline_path=Path(tmp_dir) / "o.json",
+                    prompts_path=Path(tmp_dir) / "p.json",
+                )
+                code = main(["deconstruct", str(pdf_path)])
+
+        self.assertEqual(code, 0)
+        mock_run.assert_called_once()
 
     def test_write_manuscript_output_single_layout(self) -> None:
         manuscript = Manuscript(
