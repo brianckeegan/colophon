@@ -9,6 +9,7 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 
+from .deconstruct import run_deconstruct
 from .io import (
     load_bibliography_with_format,
     load_graph,
@@ -401,6 +402,10 @@ def main(argv: list[str] | None = None) -> int:
     int
         Return value description.
     """
+    argv = list(argv) if argv is not None else sys.argv[1:]
+    if argv and argv[0] == "deconstruct":
+        return _run_deconstruct_cli(argv[1:])
+
     parser = build_parser()
     args = parser.parse_args(argv)
 
@@ -650,6 +655,22 @@ def main(argv: list[str] | None = None) -> int:
         print("Completed with citation issues; see diagnostics report.", file=sys.stderr)
     else:
         print("Generation complete.")
+    return 0
+
+
+def _run_deconstruct_cli(argv: list[str]) -> int:
+    """Run `colophon deconstruct` command."""
+    parser = argparse.ArgumentParser(description="Deconstruct a PDF into bibliography/KG/outline/prompts artifacts.")
+    parser.add_argument("pdf", help="Input PDF path.")
+    parser.add_argument("--output-dir", default="", help="Directory for artifact files (defaults to PDF directory).")
+    parser.add_argument("--stem", default="", help="Optional output filename stem.")
+    args = parser.parse_args(argv)
+
+    artifacts = run_deconstruct(pdf_path=args.pdf, output_dir=args.output_dir, stem=args.stem)
+    print(f"bibliography: {artifacts.bibliography_path}")
+    print(f"knowledge_graph: {artifacts.knowledge_graph_path}")
+    print(f"outline: {artifacts.outline_path}")
+    print(f"prompts: {artifacts.prompts_path}")
     return 0
 
 

@@ -42,6 +42,29 @@ Generate a manuscript
      --title "Colophon Demo Draft" \
      --top-k 3
 
+
+Deconstruct a PDF into artifacts
+-------------------------------
+
+Use this when you want to bootstrap inputs from a PDF:
+
+.. code-block:: bash
+
+   colophon deconstruct test.pdf
+
+Optional output controls:
+
+.. code-block:: bash
+
+   colophon deconstruct test.pdf --output-dir build/deconstruct --stem test_run
+
+Output files:
+
+- ``*_bibliography.json``
+- ``*_kg.json``
+- ``*_outline.json``
+- ``*_prompts.json``
+
 CLI arguments
 -------------
 
@@ -53,6 +76,9 @@ CLI arguments
 - ``--guidance-output``: optional JSON output path for captured user-guidance responses.
 - ``--user-guidance-stages``: comma-separated stage list for guidance capture. Supported values: ``planning``, ``recommendations``, ``outline``, ``coordination``.
 - ``--runtime``: runtime target for input resolution (``local`` default, ``codex``, ``claude_code``/``claude-code``).
+- ``deconstruct`` subcommand: ``colophon deconstruct <pdf>`` writes bibliography/KG/outline/prompts JSON artifacts from a PDF.
+- ``deconstruct --output-dir``: output directory for generated artifacts.
+- ``deconstruct --stem``: output filename stem for generated artifacts.
 - ``--artifacts-dir``: optional directory containing uploaded artifacts; missing bibliography/outline/graph/prompts paths are auto-discovered.
 - ``--llm-config``: optional LLM config JSON.
 - ``--llm-provider``: ``none``, ``openai``, ``codex``, ``openai_compatible``, ``anthropic``, ``claude``, ``github``, ``copilot``.

@@ -68,6 +68,19 @@ colophon \
 For a full stand-alone walkthrough from an empty workspace using files uploaded from
 `/examples/`, see [docs/upload_tutorial.rst](docs/upload_tutorial.rst).
 
+
+Deconstruct workflow (extract bibliography, knowledge graph, outline, and prompt bundle from a PDF):
+
+```bash
+colophon deconstruct test.pdf
+```
+
+This generates:
+- `test_bibliography.json`
+- `test_kg.json`
+- `test_outline.json`
+- `test_prompts.json`
+
 AskUserQuestion / user_input
 ----------------------------
 

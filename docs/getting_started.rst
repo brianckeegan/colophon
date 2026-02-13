@@ -61,7 +61,8 @@ Core Ontology Catalogs
 Next Steps
 ----------
 
-- User guide: :doc:`usage`
+- User guide: :doc:`user_guide`
+- Full CLI reference: :doc:`usage`
 - Empty-workspace upload tutorial (Codex/Claude Code): :doc:`upload_tutorial`
 - End-to-end tutorial: :doc:`tutorial`
 - Example assets and commands: :doc:`examples`
