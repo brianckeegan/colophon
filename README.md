@@ -1,4 +1,4 @@
-# Colophon
+![colophon logo](/docs/_src/logo.png)
 
 Colophon is a cooperative multi-agent system for long-form writing. It combines a seed knowledge graph and retrieval-augmented evidence over a bibliography to generate chapter/section drafts with citations and diagnostics.
 
