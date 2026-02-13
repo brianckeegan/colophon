@@ -1,13 +1,6 @@
 API Reference
 =============
 
-Package exports
----------------
-
-.. automodule:: colophon
-   :members:
-   :undoc-members:
-
 Models
 ------
 
