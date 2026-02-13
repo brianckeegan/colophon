@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from threading import RLock
 from typing import Any
 
 from .models import Chapter, CoordinationMessage, GapRequest, Section
@@ -12,7 +13,14 @@ from .models import Chapter, CoordinationMessage, GapRequest, Section
 class MessageBus:
     """In-memory message channel for parent/child hand-offs between agents."""
 
-    messages: list[CoordinationMessage] = field(default_factory=list)
+    _messages: list[CoordinationMessage] = field(default_factory=list, repr=False)
+    _lock: RLock = field(default_factory=RLock, init=False, repr=False, compare=False)
+
+    @property
+    def messages(self) -> list[CoordinationMessage]:
+        """Return a snapshot of all messages currently on the bus."""
+        with self._lock:
+            return list(self._messages)
 
     def send(
         self,
@@ -45,27 +53,28 @@ class MessageBus:
         CoordinationMessage
             Return value description.
         """
-        existing = self._find_existing(
-            sender=sender,
-            receiver=receiver,
-            message_type=message_type,
-            content=content,
-            related_id=related_id,
-            priority=priority,
-        )
-        if existing is not None:
-            return existing
+        with self._lock:
+            existing = self._find_existing(
+                sender=sender,
+                receiver=receiver,
+                message_type=message_type,
+                content=content,
+                related_id=related_id,
+                priority=priority,
+            )
+            if existing is not None:
+                return existing
 
-        message = CoordinationMessage(
-            sender=sender,
-            receiver=receiver,
-            message_type=message_type,
-            content=content,
-            related_id=related_id,
-            priority=priority,
-        )
-        self.messages.append(message)
-        return message
+            message = CoordinationMessage(
+                sender=sender,
+                receiver=receiver,
+                message_type=message_type,
+                content=content,
+                related_id=related_id,
+                priority=priority,
+            )
+            self._messages.append(message)
+            return message
 
     def messages_for(self, receiver: str) -> list[CoordinationMessage]:
         """Messages for.
@@ -80,7 +89,8 @@ class MessageBus:
         list[CoordinationMessage]
             Return value description.
         """
-        return [message for message in self.messages if message.receiver == receiver]
+        with self._lock:
+            return [message for message in self._messages if message.receiver == receiver]
 
     def _find_existing(
         self,
@@ -113,7 +123,7 @@ class MessageBus:
         CoordinationMessage | None
             Existing message if present; otherwise ``None``.
         """
-        for message in self.messages:
+        for message in self._messages:
             if (
                 message.sender == sender
                 and message.receiver == receiver

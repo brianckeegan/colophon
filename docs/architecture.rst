@@ -45,6 +45,9 @@ Core components
 - ``colophon.retrieval``: lexical retrieval over source text.
 - ``colophon.agents``: claim/paragraph drafting and review agents.
 - ``colophon.agents.OutlineExpanderAgent``: preliminary-outline expansion to detailed planning artifacts.
+- ``colophon.user_input``: interactive stage-aware user guidance (planning/recommendations/outline/coordination),
+  including coordination-breakdown prompts derived from gap diagnostics, plus Claude Agent SDK and OpenAI Codex
+  ``AskUserQuestion`` handlers.
 - ``colophon.pipeline``: orchestration over chapters and sections.
 - ``colophon.cli``: command-line interface for batch generation.
 
@@ -53,18 +56,19 @@ Data flow
 
 1. Resolve input artifact paths from explicit CLI flags or upload-aware directory discovery
    (``--artifacts-dir`` + ``--runtime`` for Codex/Claude Code), then load bibliography, outline, and seed knowledge graph.
-2. Optional outline expander enriches draft outline chapters and generates prompt templates.
-3. Optional KG updater embeds bibliography records (title/abstract/authors/publication), builds a vector index, performs similarity retrieval, and adds/revises KG entities/relations.
-4. Chapter/section coordinators send guidance messages to child drafting agents.
-5. For each section title, retrieve top-k evidence sources and matching graph figure nodes.
-6. Generate claims and paragraphs with optional figure references.
-7. Paragraph/section/chapter/book coordinators send status messages upward and emit structured gap requests.
-8. Aggregate sections into chapters and run citation/figure/coherence review passes.
-9. Optionally run paper recommendation workflow (OpenAlex or Semantic Scholar APIs), scoring and deduplicating candidate papers.
-10. Optionally run functional-form soft validation and emit findings in diagnostics (and optional standalone report).
-11. Optionally run companion writing-ontology validations and emit findings in diagnostics (and optional standalone report).
-12. Apply genre-ontology profile metadata/prompts to agent generation, recommendation query/scoring hints, and agent validation checks.
-13. Emit manuscript output (single-file or chapter-level project layout) with optional ``Gap Requests`` and ``Recommended Papers`` sections and diagnostics JSON including coordination, outline expansion, KG update, functional validation, companion-ontology validation, genre profile context, and recommendation results. The notes importer emits its own standalone report JSON.
+2. Optional interactive guidance captures user planning preferences (document focus, recommendation incorporation, outline expansion) before drafting.
+3. Optional outline expander enriches draft outline chapters and generates prompt templates.
+4. Optional KG updater embeds bibliography records (title/abstract/authors/publication), builds a vector index, performs similarity retrieval, and adds/revises KG entities/relations.
+5. Chapter/section coordinators send guidance messages to child drafting agents.
+6. For each section title, retrieve top-k evidence sources and matching graph figure nodes.
+7. Generate claims and paragraphs with optional figure references.
+8. Paragraph/section/chapter/book coordinators send status messages upward and emit structured gap requests.
+9. Aggregate sections into chapters and run citation/figure/coherence review passes.
+10. Optionally run paper recommendation workflow (OpenAlex or Semantic Scholar APIs), scoring and deduplicating candidate papers.
+11. Optionally run functional-form soft validation and emit findings in diagnostics (and optional standalone report).
+12. Optionally run companion writing-ontology validations and emit findings in diagnostics (and optional standalone report).
+13. Apply genre-ontology profile metadata/prompts to agent generation, recommendation query/scoring hints, and agent validation checks.
+14. Emit manuscript output (single-file or chapter-level project layout) with optional ``Gap Requests`` and ``Recommended Papers`` sections and diagnostics JSON including coordination, outline expansion, KG update, functional validation, companion-ontology validation, genre profile context, recommendation results, and user-guidance responses. The notes importer emits its own standalone report JSON.
 
 Current limitations
 -------------------

@@ -5,7 +5,7 @@ from pathlib import Path
 class DocumentationCoverageTests(unittest.TestCase):
     def test_index_includes_core_docs_surfaces(self) -> None:
         index_text = Path("docs/index.rst").read_text(encoding="utf-8")
-        for token in ("getting_started", "examples", "usage", "tutorial", "api", "references"):
+        for token in ("getting_started", "upload_tutorial", "examples", "usage", "tutorial", "api", "references"):
             self.assertIn(token, index_text)
 
     def test_api_reference_includes_core_modules(self) -> None:
@@ -31,6 +31,7 @@ class DocumentationCoverageTests(unittest.TestCase):
             "colophon.genre_ontology",
             "colophon.note_import",
             "colophon.import_cli",
+            "colophon.user_input",
         )
         for module_name in modules:
             self.assertIn(f".. automodule:: {module_name}", api_text)
@@ -38,12 +39,13 @@ class DocumentationCoverageTests(unittest.TestCase):
     def test_readme_links_to_docs_surfaces_and_ontology_catalogs(self) -> None:
         readme = Path("README.md").read_text(encoding="utf-8")
         docs_paths = (
-            "/Users/briankeegan/Documents/New project/docs/getting_started.rst",
-            "/Users/briankeegan/Documents/New project/docs/usage.rst",
-            "/Users/briankeegan/Documents/New project/docs/tutorial.rst",
-            "/Users/briankeegan/Documents/New project/docs/examples.rst",
-            "/Users/briankeegan/Documents/New project/docs/api.rst",
-            "/Users/briankeegan/Documents/New project/docs/references.rst",
+            "docs/getting_started.rst",
+            "docs/upload_tutorial.rst",
+            "docs/usage.rst",
+            "docs/tutorial.rst",
+            "docs/examples.rst",
+            "docs/api.rst",
+            "docs/references.rst",
         )
         for path in docs_paths:
             self.assertIn(path, readme)

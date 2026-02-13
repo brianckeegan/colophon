@@ -18,6 +18,7 @@ Colophon is for researchers, analysts, and technical writers who need to turn so
 ## Documentation
 
 - [Getting started](docs/getting_started.rst)
+- [Empty-workspace upload tutorial (Claude/Codex)](docs/upload_tutorial.rst)
 - [Usage and CLI options](docs/usage.rst)
 - [Tutorial](docs/tutorial.rst)
 - [Examples](docs/examples.rst)
@@ -57,9 +58,60 @@ Upload-first workflow (Codex or Claude Code):
 colophon \
   --runtime codex \
   --artifacts-dir uploads \
+  --request-user-guidance \
+  --guidance-output build/user_guidance.json \
   --output build/manuscript.md \
   --report build/diagnostics.json \
   --title "Uploaded Bundle Draft"
+```
+
+For a full stand-alone walkthrough from an empty workspace using files uploaded from
+`/examples/`, see [docs/upload_tutorial.rst](docs/upload_tutorial.rst).
+
+AskUserQuestion / user_input
+----------------------------
+
+Colophon supports interactive planning guidance before drafting:
+
+- CLI: `--request-user-guidance` + `--guidance-output`
+- Claude Agent SDK: `colophon.user_input.AgentSDKUserInputHandler`
+- OpenAI Codex/OpenAI Responses API: `colophon.user_input.OpenAICodexUserInputHandler`
+- Multi-stage support: `planning`, `recommendations`, `outline`, `coordination`
+
+User-input requests are capped to 10 questions per stage/task. If more are provided,
+Colophon scores by importance and asks only the top 10.
+
+Python (Claude Agent SDK) example:
+
+```python
+import asyncio
+from colophon.user_input import request_planning_guidance_via_agent_sdk
+
+async def main() -> None:
+    text, guidance = await request_planning_guidance_via_agent_sdk(
+        "Plan a draft with recommendation integration and optional outline expansion."
+    )
+    print(text)
+    print(guidance)
+
+asyncio.run(main())
+```
+
+Python (OpenAI Codex) example:
+
+```python
+import asyncio
+from colophon.user_input import request_planning_guidance_via_openai_codex
+
+async def main() -> None:
+    text, guidance = await request_planning_guidance_via_openai_codex(
+        task_description="Prepare an implementation plan from uploaded writing artifacts.",
+        model="gpt-5-codex",
+    )
+    print(text)
+    print(guidance)
+
+asyncio.run(main())
 ```
 
 ## Get involved

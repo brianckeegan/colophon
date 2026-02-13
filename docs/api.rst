@@ -124,3 +124,10 @@ Notes import
 .. automodule:: colophon.import_cli
    :members:
    :undoc-members:
+
+User input
+----------
+
+.. automodule:: colophon.user_input
+   :members:
+   :undoc-members:

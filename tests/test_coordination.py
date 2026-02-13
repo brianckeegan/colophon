@@ -1,5 +1,7 @@
 import json
+import threading
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from colophon.coordination import (
@@ -10,7 +12,7 @@ from colophon.coordination import (
     SectionCoordinationAgent,
 )
 from colophon.functional_forms import select_functional_form
-from colophon.models import Chapter, Paragraph, Section
+from colophon.models import Chapter, CoordinationMessage, Paragraph, Section
 
 
 class CoordinationTests(unittest.TestCase):
@@ -36,6 +38,41 @@ class CoordinationTests(unittest.TestCase):
         bus = MessageBus()
         bus.send("section", "paragraph", "guidance", "Write clearly")
         bus.send("section", "paragraph", "guidance", "Write clearly")
+
+        self.assertEqual(len(bus.messages), 1)
+
+    def test_message_bus_messages_snapshot_is_defensive_copy(self) -> None:
+        bus = MessageBus()
+        bus.send("section", "paragraph", "guidance", "Write clearly")
+
+        snapshot = bus.messages
+        snapshot.append(
+            CoordinationMessage(
+                sender="snapshot",
+                receiver="snapshot",
+                message_type="debug",
+                content="local mutation should not affect bus",
+            )
+        )
+
+        self.assertEqual(len(snapshot), 2)
+        self.assertEqual(len(bus.messages), 1)
+
+    def test_message_bus_threadsafe_dedupe_under_parallel_send(self) -> None:
+        bus = MessageBus()
+        workers = 16
+        repetitions = 200
+        barrier = threading.Barrier(workers)
+
+        def _worker() -> None:
+            barrier.wait()
+            for _ in range(repetitions):
+                bus.send("section", "paragraph", "guidance", "Write clearly")
+
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            futures = [executor.submit(_worker) for _ in range(workers)]
+            for future in futures:
+                future.result()
 
         self.assertEqual(len(bus.messages), 1)
 

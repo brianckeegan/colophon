@@ -17,6 +17,9 @@ This tutorial walks through a minimum viable end-to-end run using:
 - hierarchical coordination/editing agents with message passing
 - optional related-paper recommendation proposals
 
+If you specifically want an upload-first run from an empty Claude Code/Codex workspace,
+use the stand-alone guide: :doc:`upload_tutorial`.
+
 Minimum viable inputs
 ---------------------
 
@@ -175,6 +178,28 @@ Run the generator
 
 If you skipped notes import, replace ``build/tutorial_notes_graph_obsidian.json`` with ``examples/seed_graph.json`` in commands below.
 
+Optional: capture user guidance before drafting
+-----------------------------------------------
+
+This flow collects user preferences for planning-document focus, recommendation incorporation,
+and outline expansion using ``AskUserQuestion``-style prompts:
+
+.. code-block:: bash
+
+   colophon \
+     --runtime codex \
+     --artifacts-dir examples \
+     --request-user-guidance \
+     --user-guidance-stages planning,recommendations,outline,coordination \
+     --guidance-output build/tutorial_user_guidance.json \
+     --output build/tutorial_guided.md \
+     --output-format markdown \
+     --report build/tutorial_guided_diagnostics.json \
+     --title "Tutorial Draft (Guided)"
+
+Guidance responses are recorded in diagnostics under ``user_guidance``.
+If more than 10 prompts are requested at one stage, Colophon asks only the top 10 by importance.
+
 Markdown output:
 
 .. code-block:: bash
@@ -208,6 +233,30 @@ Enable LLM hooks (optional):
      --output-format markdown \
      --report build/tutorial_llm_diagnostics.json \
      --title "Tutorial Draft (LLM)"
+
+Optional: direct SDK integration for AskUserQuestion
+----------------------------------------------------
+
+.. code-block:: python
+
+   import asyncio
+   from colophon.user_input import (
+       request_planning_guidance_via_agent_sdk,
+       request_planning_guidance_via_openai_codex,
+   )
+
+   async def main() -> None:
+       claude_text, claude_guidance = await request_planning_guidance_via_agent_sdk(
+           "Plan chapter drafting with recommendations and outline expansion choices."
+       )
+       codex_text, codex_guidance = await request_planning_guidance_via_openai_codex(
+           task_description="Plan drafting workflow from uploaded artifacts.",
+           model="gpt-5-codex",
+       )
+       print(claude_text, claude_guidance)
+       print(codex_text, codex_guidance)
+
+   asyncio.run(main())
 
 Enable KG updates with local embeddings (optional):
 

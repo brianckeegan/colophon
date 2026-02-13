@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from threading import Lock
 
 from .agents import (
     CLAIM_TEMPLATE_DEFAULT,
@@ -146,8 +147,23 @@ class ColophonPipeline:
     """
 
     config: PipelineConfig = field(default_factory=PipelineConfig)
+    _run_lock: Lock = field(default_factory=Lock, init=False, repr=False, compare=False)
 
     def run(
+        self,
+        bibliography: list[Source],
+        outline: list[dict],
+        graph: KnowledgeGraph,
+    ) -> Manuscript:
+        """Run the pipeline with a non-reentrant instance-level execution guard."""
+        if not self._run_lock.acquire(blocking=False):
+            raise RuntimeError("ColophonPipeline.run() is already active for this pipeline instance.")
+        try:
+            return self._run_unlocked(bibliography=bibliography, outline=outline, graph=graph)
+        finally:
+            self._run_lock.release()
+
+    def _run_unlocked(
         self,
         bibliography: list[Source],
         outline: list[dict],

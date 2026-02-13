@@ -49,6 +49,9 @@ CLI arguments
 - ``--bibliography-format``: ``auto`` (default), ``json``, ``csv``, or ``bibtex``.
 - ``--outline``: outline JSON with ``chapters`` and ``sections``.
 - ``--prompts``: optional prompt templates JSON.
+- ``--request-user-guidance``: interactively request planning guidance from the user (planning document style, recommendation incorporation, outline expansion, additional notes).
+- ``--guidance-output``: optional JSON output path for captured user-guidance responses.
+- ``--user-guidance-stages``: comma-separated stage list for guidance capture. Supported values: ``planning``, ``recommendations``, ``outline``, ``coordination``.
 - ``--runtime``: runtime target for input resolution (``local`` default, ``codex``, ``claude_code``/``claude-code``).
 - ``--artifacts-dir``: optional directory containing uploaded artifacts; missing bibliography/outline/graph/prompts paths are auto-discovered.
 - ``--llm-config``: optional LLM config JSON.
@@ -134,6 +137,87 @@ artifact discovery instead of passing every file path explicitly:
 
 For Claude Code, use ``--runtime claude-code`` (or ``claude_code``). Explicit flags such as ``--bibliography`` and
 ``--graph`` still override discovered upload files when both are provided.
+
+For a complete empty-workspace walkthrough (what to upload from ``/examples/``, exact commands, and troubleshooting),
+see :doc:`upload_tutorial`.
+
+Interactive planning guidance
+-----------------------------
+
+Capture user guidance before drafting:
+
+.. code-block:: bash
+
+   colophon \
+     --runtime claude-code \
+     --artifacts-dir uploads \
+     --request-user-guidance \
+     --user-guidance-stages planning,recommendations,outline,coordination \
+     --guidance-output build/user_guidance.json \
+     --output build/manuscript.md \
+     --report build/diagnostics.json
+
+The guidance flow can:
+
+- shape planning-document instructions
+- tune recommendation settings (enabled/top-k/min-score strategy)
+- tune outline expansion settings (enabled/depth profile/max subsections)
+- capture coordination-breakdown remediation priorities (including post-run gap-driven prompts)
+
+Guidance is stored in diagnostics under ``user_guidance``.
+User-input prompts are capped to at most 10 per task/stage; if more are available, Colophon ranks by importance and
+asks only the top 10.
+
+Agent SDK integrations
+----------------------
+
+Claude:
+
+- ``colophon.user_input.AgentSDKUserInputHandler``
+- ``colophon.user_input.request_planning_guidance_via_agent_sdk``
+
+OpenAI Codex:
+
+- ``colophon.user_input.OpenAICodexUserInputHandler``
+- ``colophon.user_input.build_codex_ask_user_question_tool``
+- ``colophon.user_input.request_planning_guidance_via_openai_codex``
+
+Both interfaces enforce the same per-stage input cap (top 10 by importance when overflow occurs).
+
+Claude Agent SDK pattern:
+
+.. code-block:: python
+
+   from claude_agent_sdk import ClaudeAgentOptions, query
+   from colophon.user_input import AgentSDKUserInputHandler
+
+   handler = AgentSDKUserInputHandler()
+   options = ClaudeAgentOptions(
+       tools=["Read", "Grep", "AskUserQuestion"],
+       can_use_tool=handler.can_use_tool,
+   )
+
+   # prompt should instruct the model to call AskUserQuestion before planning
+   async for message in query(prompt="Draft a plan and ask user guidance first.", options=options):
+       pass
+
+OpenAI Codex / Responses API pattern:
+
+.. code-block:: python
+
+   from colophon.user_input import (
+       OpenAICodexUserInputHandler,
+       build_codex_ask_user_question_tool,
+   )
+   from openai import OpenAI
+
+   client = OpenAI()
+   handler = OpenAICodexUserInputHandler()
+   tools = [build_codex_ask_user_question_tool()]
+
+   # when a function_call to AskUserQuestion is returned:
+   # output = handler.handle_function_call(call["name"], call.get("arguments"))
+   # then send function_call_output back into client.responses.create(...)
 
 Graph formats
 -------------

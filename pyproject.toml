@@ -16,6 +16,12 @@ docs = [
   "sphinx>=8.0",
   "furo>=2024.8.6"
 ]
+agent_sdk = [
+  "claude-agent-sdk"
+]
+codex_sdk = [
+  "openai>=1.0.0"
+]
 
 [project.scripts]
 colophon = "colophon.cli:main"

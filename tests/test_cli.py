@@ -99,6 +99,26 @@ class CLITests(unittest.TestCase):
         self.assertEqual(args.artifacts_dir, "uploads")
         self.assertEqual(args.runtime, "claude-code")
 
+    def test_parser_accepts_user_guidance_flags(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(
+            [
+                "--artifacts-dir",
+                "uploads",
+                "--output",
+                "build/out.md",
+                "--request-user-guidance",
+                "--user-guidance-stages",
+                "planning,recommendations,outline,coordination",
+                "--guidance-output",
+                "build/guidance.json",
+            ]
+        )
+
+        self.assertTrue(args.request_user_guidance)
+        self.assertEqual(args.user_guidance_stages, "planning,recommendations,outline,coordination")
+        self.assertEqual(args.guidance_output, "build/guidance.json")
+
     def test_parser_accepts_soft_validation_flags(self) -> None:
         parser = build_parser()
         args = parser.parse_args(

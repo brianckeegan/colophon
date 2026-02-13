@@ -6,6 +6,7 @@ import argparse
 import json
 import re
 import sys
+from dataclasses import asdict
 from pathlib import Path
 
 from .io import (
@@ -32,6 +33,18 @@ from .ontology import (
 )
 from .pipeline import ColophonPipeline, PipelineConfig
 from .recommendations import RecommendationConfig
+from .user_input import (
+    apply_guidance_to_pipeline_flags,
+    apply_coordination_guidance,
+    apply_outline_guidance,
+    apply_recommendation_guidance,
+    collect_stage_guidance,
+    collect_user_guidance_bundle,
+    infer_coordination_guidance,
+    infer_planning_guidance,
+    normalize_guidance_stages,
+    GUIDANCE_STAGE_COORDINATION,
+)
 from .vectors import EmbeddingConfig
 
 
@@ -64,6 +77,27 @@ def build_parser() -> argparse.ArgumentParser:
         "--prompts",
         default="",
         help="Optional prompts JSON file for template overrides (claim/paragraph/empty section).",
+    )
+    parser.add_argument(
+        "--request-user-guidance",
+        action="store_true",
+        help=(
+            "Interactively request stage-aware user guidance (planning/recommendations/outline/coordination) "
+            "before and after drafting."
+        ),
+    )
+    parser.add_argument(
+        "--guidance-output",
+        default="",
+        help="Optional path to write captured user guidance JSON.",
+    )
+    parser.add_argument(
+        "--user-guidance-stages",
+        default="planning,recommendations,outline,coordination",
+        help=(
+            "Comma-separated guidance stages to collect when --request-user-guidance is enabled. "
+            "Supported: planning,recommendations,outline,coordination."
+        ),
     )
     parser.add_argument(
         "--runtime",
@@ -389,10 +423,72 @@ def main(argv: list[str] | None = None) -> int:
     outline = load_outline(artifacts.outline)
     graph = load_graph(artifacts.graph, graph_format=artifacts.graph_format)
     prompts = load_prompts(artifacts.prompts) if artifacts.prompts else {}
+    user_guidance_bundle = None
+    post_coordination_guidance = None
+    guidance_stages: list[str] = []
+    recommendations_enabled = args.enable_paper_recommendations
+    outline_expander_enabled = args.enable_outline_expander
     llm_config = _resolve_llm_config(args)
     llm_client = create_llm_client(llm_config)
     recommendation_config = _resolve_recommendation_config(args)
     kg_update_config = _resolve_kg_update_config(args)
+    outline_max_subsections = max(1, args.outline_max_subsections)
+    coordination_max_iterations = max(1, args.coordination_max_iterations)
+    if args.request_user_guidance:
+        guidance_stages = normalize_guidance_stages(args.user_guidance_stages)
+        if not guidance_stages:
+            guidance_stages = ["planning", "recommendations", "outline", "coordination"]
+        user_guidance_bundle = collect_user_guidance_bundle(
+            stages=guidance_stages,
+            context_by_stage={
+                "planning": {},
+                "recommendations": {
+                    "enabled": recommendations_enabled,
+                    "top_k": recommendation_config.top_k,
+                    "per_seed_limit": recommendation_config.per_seed_limit,
+                    "min_score": recommendation_config.min_score,
+                },
+                "outline": {
+                    "enabled": outline_expander_enabled,
+                    "max_subsections": outline_max_subsections,
+                },
+                "coordination": {
+                    "max_iterations": coordination_max_iterations,
+                },
+            },
+        )
+        planning_guidance = infer_planning_guidance(user_guidance_bundle.answers_by_stage.get("planning", {}))
+        recommendations_enabled, outline_expander_enabled = apply_guidance_to_pipeline_flags(
+            guidance=planning_guidance,
+            enable_paper_recommendations=recommendations_enabled,
+            enable_outline_expander=outline_expander_enabled,
+        )
+        recommendations_enabled, resolved_top_k, resolved_per_seed, resolved_min_score = apply_recommendation_guidance(
+            guidance=user_guidance_bundle.recommendations,
+            enable_recommendations=recommendations_enabled,
+            top_k=recommendation_config.top_k,
+            per_seed_limit=recommendation_config.per_seed_limit,
+            min_score=recommendation_config.min_score,
+        )
+        recommendation_config = RecommendationConfig(
+            provider=recommendation_config.provider,
+            api_base_url=recommendation_config.api_base_url,
+            timeout_seconds=recommendation_config.timeout_seconds,
+            per_seed_limit=resolved_per_seed,
+            top_k=resolved_top_k,
+            min_score=resolved_min_score,
+            mailto=recommendation_config.mailto,
+            api_key_env=recommendation_config.api_key_env,
+        )
+        outline_expander_enabled, outline_max_subsections = apply_outline_guidance(
+            guidance=user_guidance_bundle.outline,
+            enable_outline_expander=outline_expander_enabled,
+            max_subsections=outline_max_subsections,
+        )
+        coordination_max_iterations = apply_coordination_guidance(
+            guidance=user_guidance_bundle.coordination,
+            coordination_max_iterations=coordination_max_iterations,
+        )
     functional_forms_payload = None
     functional_forms_path = args.functional_forms.strip()
     needs_functional_forms = args.enable_soft_validation or args.enable_outline_expander or not args.disable_coordination_agents
@@ -441,14 +537,14 @@ def main(argv: list[str] | None = None) -> int:
             genre_ontology=genre_ontology_payload,
             genre_profile_id=args.genre_profile_id.strip(),
             enable_coordination_agents=not args.disable_coordination_agents,
-            coordination_max_revision_iterations=max(1, args.coordination_max_iterations),
-            enable_paper_recommendations=args.enable_paper_recommendations,
+            coordination_max_revision_iterations=coordination_max_iterations,
+            enable_paper_recommendations=recommendations_enabled,
             recommendation_config=recommendation_config,
             enable_kg_updates=args.enable_kg_updates,
             kg_update_config=kg_update_config,
-            enable_outline_expander=args.enable_outline_expander,
+            enable_outline_expander=outline_expander_enabled,
             outline_expander=OutlineExpanderAgent(
-                max_subsections_per_section=max(1, args.outline_max_subsections),
+                max_subsections_per_section=outline_max_subsections,
                 llm_client=llm_client,
                 llm_system_prompt=llm_config.system_prompt or None,
                 tone=args.narrative_tone.strip() or "neutral",
@@ -467,6 +563,21 @@ def main(argv: list[str] | None = None) -> int:
         )
     )
     manuscript = pipeline.run(bibliography=bibliography, outline=outline, graph=graph)
+    if (
+        args.request_user_guidance
+        and GUIDANCE_STAGE_COORDINATION in guidance_stages
+        and isinstance(manuscript.diagnostics.get("gap_requests"), list)
+        and bool(manuscript.diagnostics.get("gap_requests"))
+    ):
+        post_answers = collect_stage_guidance(
+            stage=GUIDANCE_STAGE_COORDINATION,
+            context={
+                "gap_requests": manuscript.diagnostics.get("gap_requests", []),
+                "coordination_messages": manuscript.diagnostics.get("coordination_messages", []),
+                "max_iterations": coordination_max_iterations,
+            },
+        )
+        post_coordination_guidance = infer_coordination_guidance(post_answers)
     manuscript.diagnostics["runtime"] = artifacts.runtime
     manuscript.diagnostics["input_artifacts"] = {
         "artifacts_dir": artifacts.artifacts_dir,
@@ -476,6 +587,23 @@ def main(argv: list[str] | None = None) -> int:
         "graph": artifacts.graph,
         "graph_format": artifacts.graph_format,
         "prompts": artifacts.prompts,
+    }
+    manuscript.diagnostics["user_guidance"] = {
+        "requested": bool(args.request_user_guidance),
+        "stages": guidance_stages,
+        "planning": asdict(user_guidance_bundle.planning) if user_guidance_bundle else {},
+        "recommendations": asdict(user_guidance_bundle.recommendations) if user_guidance_bundle else {},
+        "outline": asdict(user_guidance_bundle.outline) if user_guidance_bundle else {},
+        "coordination": asdict(user_guidance_bundle.coordination) if user_guidance_bundle else {},
+        "answers_by_stage": user_guidance_bundle.answers_by_stage if user_guidance_bundle else {},
+        "coordination_breakdown_post": asdict(post_coordination_guidance) if post_coordination_guidance else {},
+        "planning_document_focus": user_guidance_bundle.planning.planning_document_focus if user_guidance_bundle else "",
+        "incorporate_recommendations": (
+            user_guidance_bundle.planning.incorporate_recommendations if user_guidance_bundle else None
+        ),
+        "expand_outline": user_guidance_bundle.planning.expand_outline if user_guidance_bundle else None,
+        "additional_notes": user_guidance_bundle.planning.additional_notes if user_guidance_bundle else "",
+        "answers": user_guidance_bundle.planning.answers if user_guidance_bundle else {},
     }
 
     output_format = _resolve_output_format(args.output_format, args.output)
@@ -487,6 +615,8 @@ def main(argv: list[str] | None = None) -> int:
         output_layout=output_layout,
     )
     write_text(args.report, json.dumps(manuscript.diagnostics, indent=2) + "\n")
+    if args.guidance_output:
+        write_text(args.guidance_output, json.dumps(manuscript.diagnostics["user_guidance"], indent=2) + "\n")
     if args.recommendation_report:
         proposals = manuscript.diagnostics.get("recommendation_proposals", [])
         write_text(args.recommendation_report, json.dumps(proposals, indent=2) + "\n")

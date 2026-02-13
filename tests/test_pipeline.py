@@ -1,5 +1,8 @@
 import unittest
 import json
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from colophon.graph import graph_from_dict
@@ -19,6 +22,15 @@ class _FakeLLMClient:
         if "Write one factual claim sentence" in prompt:
             return "Pipeline LLM claim."
         return "Pipeline LLM paragraph."
+
+
+class _SlowLLMClient:
+    def generate(self, prompt: str, system_prompt: str | None = None) -> str:
+        _ = system_prompt
+        time.sleep(0.05)
+        if "Write one factual claim sentence" in prompt:
+            return "Slow LLM claim."
+        return "Slow LLM paragraph."
 
 
 class _StubRecommendationClient:
@@ -55,6 +67,68 @@ class _StubOutlineExpander:
 
 
 class PipelineTests(unittest.TestCase):
+    def test_pipeline_rejects_concurrent_run_on_same_instance(self) -> None:
+        bibliography = [
+            Source(
+                id="s1",
+                title="KG Paper",
+                authors=["A"],
+                year=2022,
+                text="Knowledge graph methods improve factual grounding.",
+            )
+        ]
+        outline = [{"title": "Intro", "sections": ["Knowledge Graph Overview"]}]
+        graph = graph_from_dict({"entities": ["Knowledge Graph"], "relations": []})
+        pipeline = ColophonPipeline(
+            config=PipelineConfig(
+                title="Concurrency Guard Manuscript",
+                top_k=1,
+                llm_client=_SlowLLMClient(),
+                enable_coordination_agents=False,
+            )
+        )
+        barrier = threading.Barrier(2)
+        results: list[str] = []
+        errors: list[Exception] = []
+
+        def _run_once() -> None:
+            barrier.wait()
+            try:
+                manuscript = pipeline.run(bibliography=bibliography, outline=outline, graph=graph)
+                results.append(manuscript.title)
+            except Exception as exc:  # pragma: no cover - assertions below validate behavior.
+                errors.append(exc)
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [executor.submit(_run_once) for _ in range(2)]
+            for future in futures:
+                future.result()
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(len(errors), 1)
+        self.assertIsInstance(errors[0], RuntimeError)
+        self.assertIn("already active", str(errors[0]))
+
+    def test_pipeline_allows_sequential_runs_on_same_instance(self) -> None:
+        bibliography = [
+            Source(
+                id="s1",
+                title="KG Paper",
+                authors=["A"],
+                year=2022,
+                text="Knowledge graph methods improve factual grounding.",
+            )
+        ]
+        outline = [{"title": "Intro", "sections": ["Knowledge Graph Overview"]}]
+        graph = graph_from_dict({"entities": ["Knowledge Graph"], "relations": []})
+        pipeline = ColophonPipeline(config=PipelineConfig(title="Sequential Guard Manuscript", top_k=1))
+
+        first = pipeline.run(bibliography=bibliography, outline=outline, graph=graph)
+        second = pipeline.run(bibliography=bibliography, outline=outline, graph=graph)
+
+        self.assertEqual(first.title, "Sequential Guard Manuscript")
+        self.assertEqual(second.title, "Sequential Guard Manuscript")
+
     def test_pipeline_emits_soft_validation_diagnostics_when_enabled(self) -> None:
         bibliography = [
             Source(

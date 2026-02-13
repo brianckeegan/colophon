@@ -3,6 +3,8 @@ Examples
 
 This page indexes example inputs and common command variants.
 
+For a step-by-step empty-workspace upload walkthrough, see :doc:`upload_tutorial`.
+
 Example Inputs
 --------------
 
@@ -62,3 +64,30 @@ Notes-import then draft:
      --graph build/examples_notes_graph.json \
      --output build/examples_notes_draft.md \
      --report build/examples_notes_diagnostics.json
+
+Upload-first run with interactive guidance:
+
+.. code-block:: bash
+
+   colophon \
+     --runtime claude-code \
+     --artifacts-dir examples \
+     --request-user-guidance \
+     --user-guidance-stages planning,recommendations,outline,coordination \
+     --guidance-output build/examples_guidance.json \
+     --output build/examples_guided.md \
+     --report build/examples_guided_diagnostics.json
+
+Python adapters for AskUserQuestion behavior:
+
+.. code-block:: python
+
+   from colophon.user_input import (
+       AgentSDKUserInputHandler,
+       OpenAICodexUserInputHandler,
+       build_codex_ask_user_question_tool,
+   )
+
+   # Claude Agent SDK: pass AgentSDKUserInputHandler().can_use_tool to can_use_tool
+   # OpenAI Codex: register build_codex_ask_user_question_tool() and route
+   # function calls through OpenAICodexUserInputHandler().handle_function_call

@@ -30,6 +30,26 @@ Run A Minimal Draft
      --report build/getting_started_diagnostics.json \
      --title "Getting Started Draft"
 
+Run With Interactive Guidance (AskUserQuestion Style)
+------------------------------------------------------
+
+.. code-block:: bash
+
+   colophon \
+     --runtime codex \
+     --artifacts-dir examples \
+     --request-user-guidance \
+     --user-guidance-stages planning,recommendations,outline,coordination \
+     --guidance-output build/getting_started_guidance.json \
+     --output build/getting_started_guided.md \
+     --output-format markdown \
+     --report build/getting_started_guided_diagnostics.json \
+     --title "Getting Started Draft (Guided)"
+
+Guidance responses are written under ``user_guidance`` in diagnostics and can toggle
+recommendation incorporation / outline expansion before drafting.
+Input requests are capped to top-10 questions per stage.
+
 Core Ontology Catalogs
 ----------------------
 
@@ -42,6 +62,7 @@ Next Steps
 ----------
 
 - User guide: :doc:`usage`
+- Empty-workspace upload tutorial (Codex/Claude Code): :doc:`upload_tutorial`
 - End-to-end tutorial: :doc:`tutorial`
 - Example assets and commands: :doc:`examples`
 - API reference: :doc:`api`
