@@ -1,0 +1,66 @@
+{
+  "id": "colophon_genre_ontology",
+  "name": "Colophon Genre Ontology",
+  "ontology_type": "genre_profile_ontology",
+  "schema_version": "1.0",
+  "version": "1.0",
+  "default_profile_id": "technical_research",
+  "profiles": [
+    {
+      "id": "technical_research",
+      "name": "Technical Research",
+      "audience": "technical experts",
+      "discipline": "computer science",
+      "style": "technical",
+      "genre": "technical_report",
+      "language": "English",
+      "tone": "precise",
+      "agent_prompts": {
+        "claim_author_agent": "State assumptions, baselines, and measurable outcomes whenever possible.",
+        "paragraph_agent": "Prefer quantified comparisons, uncertainty framing, and explicit evidence warrants.",
+        "outline_expander": "Ensure methods, benchmark design, artifact manifest, and failure modes are represented.",
+        "section_coordinator": "Maintain traceability from method assumptions to results and limitations.",
+        "chapter_coordinator": "Enforce technical section coverage and reproducibility-critical sequencing."
+      },
+      "recommendation": {
+        "query_terms": [
+          "benchmark",
+          "baseline",
+          "artifact",
+          "ablation",
+          "reproducibility"
+        ],
+        "keyword_weight": 0.12
+      },
+      "validation": {
+        "min_top_k": 2,
+        "require_llm_for_non_english": true
+      }
+    },
+    {
+      "id": "policy_brief",
+      "name": "Policy Brief",
+      "audience": "policy analysts",
+      "discipline": "public policy",
+      "style": "persuasive",
+      "genre": "policy_brief",
+      "language": "English",
+      "tone": "formal",
+      "agent_prompts": {
+        "claim_author_agent": "Highlight implementation constraints and policy relevance with cited evidence.",
+        "paragraph_agent": "Focus on implications, tradeoffs, and stakeholder effects."
+      },
+      "recommendation": {
+        "query_terms": [
+          "governance",
+          "implementation",
+          "policy evaluation"
+        ],
+        "keyword_weight": 0.1
+      },
+      "validation": {
+        "min_top_k": 1
+      }
+    }
+  ]
+}

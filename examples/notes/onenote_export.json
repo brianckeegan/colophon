@@ -1,0 +1,15 @@
+{
+  "notes": [
+    {
+      "id": "one-note-a",
+      "title": "OneNote Topic A",
+      "content": "Link to [OneNote Topic B](one-note-b) and onenote:https://d.docs.live.net/demo/page",
+      "links": ["https://example.org/onenote-resource"]
+    },
+    {
+      "id": "one-note-b",
+      "title": "OneNote Topic B",
+      "content": "Follow-up details and synthesis notes"
+    }
+  ]
+}

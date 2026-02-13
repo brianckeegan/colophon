@@ -1,0 +1,10 @@
+{
+  "provider": "semantic_scholar",
+  "api_base_url": "https://api.semanticscholar.org",
+  "api_key_env": "SEMANTIC_SCHOLAR_API_KEY",
+  "timeout_seconds": 20.0,
+  "per_seed_limit": 5,
+  "top_k": 8,
+  "min_score": 0.2,
+  "mailto": ""
+}

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<en-export>
+  <note>
+    <title>Evernote Briefing</title>
+    <content><![CDATA[
+      <en-note>Read the <a href="https://example.org/evernote-briefing">briefing</a> and map relations.</en-note>
+    ]]></content>
+  </note>
+</en-export>

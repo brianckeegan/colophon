@@ -1,0 +1,11 @@
+{
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-5",
+    "api_key_env": "OPENAI_API_KEY",
+    "api_base_url": "https://api.openai.com/v1",
+    "temperature": 0.2,
+    "max_tokens": 256,
+    "system_prompt": "You are an evidence-grounded writing assistant for long-form manuscripts."
+  }
+}

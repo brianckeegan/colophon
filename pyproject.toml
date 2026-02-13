@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "colophon"
+version = "0.1.0"
+description = "Cooperative multi-agent long-form authoring system with KG + RAG"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Colophon Contributors" }]
+dependencies = []
+
+[project.optional-dependencies]
+docs = [
+  "sphinx>=8.0",
+  "furo>=2024.8.6"
+]
+
+[project.scripts]
+colophon = "colophon.cli:main"
+colophon-import-notes = "colophon.import_cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["colophon*"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]

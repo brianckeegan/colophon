@@ -1,0 +1,18 @@
+{
+  "chapters": [
+    {
+      "title": "Foundations",
+      "sections": [
+        "Why Knowledge Graphs Matter",
+        "Why Retrieval Grounding Matters"
+      ]
+    },
+    {
+      "title": "System Design",
+      "sections": [
+        "Agent Responsibilities",
+        "Evaluation and Review"
+      ]
+    }
+  ]
+}
