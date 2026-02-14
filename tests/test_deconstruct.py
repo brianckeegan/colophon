@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from colophon.deconstruct import (
 <<<<<<< Updated upstream
+    _build_spacy_kg_extractor,
 =======
     _build_spacy_kg_extractor,
 >>>>>>> Stashed changes
