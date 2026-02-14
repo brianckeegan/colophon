@@ -18,9 +18,6 @@ class DeconstructArtifacts:
     outline_path: Path
     prompts_path: Path
 
-
-<<<<<<< Updated upstream
-=======
 @dataclass(slots=True)
 class SpacyKGExtractor:
     """Container for deterministic spaCy rule-based extraction components."""
@@ -31,7 +28,6 @@ class SpacyKGExtractor:
     dependency_matcher: object
 
 
->>>>>>> Stashed changes
 def run_deconstruct(pdf_path: str | Path, output_dir: str | Path = "", stem: str = "") -> DeconstructArtifacts:
     """Run the end-to-end PDF deconstruction workflow."""
     source_path = Path(pdf_path)
@@ -194,24 +190,6 @@ def _lookup_openalex(title: str) -> dict[str, object]:
 
 
 def build_knowledge_graph(body_text: str, bibliography: list[dict[str, object]]) -> dict[str, object]:
-    """Build a lightweight claim/reference knowledge graph."""
-    sentences = [chunk.strip() for chunk in re.split(r"(?<=[.!?])\s+", body_text) if chunk.strip()]
-    claims = [s for s in sentences if len(s.split()) >= 8][:40]
-    nodes: list[dict[str, object]] = []
-    edges: list[dict[str, str]] = []
-    for idx, claim in enumerate(claims, start=1):
-        claim_id = f"claim-{idx:03d}"
-        nodes.append({"id": claim_id, "type": "claim", "label": claim})
-        for ref_idx in _citation_indices_from_sentence(claim):
-            if 1 <= ref_idx <= len(bibliography):
-                ref_id = str(bibliography[ref_idx - 1].get("id", f"ref-{ref_idx:03d}"))
-                edges.append({"source": claim_id, "target": ref_id, "relation": "supported_by"})
-    for row in bibliography:
-        nodes.append({"id": row.get("id", ""), "type": "reference", "label": row.get("title", "")})
-    return {"nodes": nodes, "edges": edges}
-
-
-=======
     """Build a deterministic claim/entity/reference graph using spaCy rule matchers."""
     sentences = [chunk.strip() for chunk in re.split(r"(?<=[.!?])\s+", body_text) if chunk.strip()]
     claims = [sentence for sentence in sentences if len(sentence.split()) >= 8][:40]
@@ -463,8 +441,6 @@ def _find_entity_id_for_token(entity_ids: list[str], entities: list[dict[str, ob
             return entity_ids[idx]
     return ""
 
-
->>>>>>> Stashed changes
 def _citation_indices_from_sentence(sentence: str) -> list[int]:
     indices: list[int] = []
     for match in re.findall(r"\[(\d+)\]", sentence):
@@ -474,15 +450,10 @@ def _citation_indices_from_sentence(sentence: str) -> list[int]:
             continue
     return indices
 
-
-<<<<<<< Updated upstream
-=======
 def _slugify(value: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
     return slug or "unknown"
 
-
->>>>>>> Stashed changes
 def build_outline(body_text: str, fallback_title: str) -> dict[str, object]:
     """Create a simple article outline object."""
     paragraphs = [chunk.strip() for chunk in body_text.split("\n\n") if chunk.strip()]
@@ -530,7 +501,3 @@ def build_reverse_prompts(
 
 def _write_json(path: Path, payload: dict[str, object]) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes

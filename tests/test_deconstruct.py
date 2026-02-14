@@ -5,11 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from colophon.deconstruct import (
-<<<<<<< Updated upstream
     _build_spacy_kg_extractor,
-=======
-    _build_spacy_kg_extractor,
->>>>>>> Stashed changes
     build_bibliography,
     build_knowledge_graph,
     build_outline,
@@ -34,11 +30,6 @@ class DeconstructTests(unittest.TestCase):
 
     def test_build_knowledge_graph_links_claims_to_refs(self) -> None:
         bibliography = [{"id": "ref-001", "title": "Paper A"}]
-<<<<<<< Updated upstream
-        graph = build_knowledge_graph("This is a sufficiently long claim sentence [1].", bibliography)
-        self.assertTrue(graph["nodes"])
-        self.assertTrue(graph["edges"])
-=======
         graph = build_knowledge_graph(
             "Knowledge graph methods improve drafting quality in this sufficiently long claim sentence [1].",
             bibliography,
@@ -65,7 +56,6 @@ class DeconstructTests(unittest.TestCase):
         else:
             self.assertTrue(hasattr(extractor, "matcher"))
             self.assertTrue(hasattr(extractor, "dependency_matcher"))
->>>>>>> Stashed changes
 
     def test_build_outline_and_prompts(self) -> None:
         outline = build_outline("Paper title\n\nIntro paragraph.\n\nSecond paragraph.", "fallback")
@@ -99,15 +89,5 @@ class DeconstructTests(unittest.TestCase):
         self.assertEqual(len(bibliography), 1)
         self.assertEqual(bibliography[0]["doi"], "10.1234/test")
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-
 if __name__ == "__main__":
     unittest.main()
->>>>>>> Stashed changes
-=======
-
-if __name__ == "__main__":
-    unittest.main()
->>>>>>> Stashed changes
