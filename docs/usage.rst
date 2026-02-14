@@ -44,7 +44,7 @@ Generate a manuscript
 
 
 Deconstruct a PDF into artifacts
--------------------------------
+--------------------------------
 
 Use this when you want to bootstrap inputs from a PDF:
 
