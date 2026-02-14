@@ -19,6 +19,19 @@ class DeconstructArtifacts:
     prompts_path: Path
 
 
+<<<<<<< Updated upstream
+=======
+@dataclass(slots=True)
+class SpacyKGExtractor:
+    """Container for deterministic spaCy rule-based extraction components."""
+
+    nlp: object
+    entity_ruler: object
+    matcher: object
+    dependency_matcher: object
+
+
+>>>>>>> Stashed changes
 def run_deconstruct(pdf_path: str | Path, output_dir: str | Path = "", stem: str = "") -> DeconstructArtifacts:
     """Run the end-to-end PDF deconstruction workflow."""
     source_path = Path(pdf_path)
@@ -198,6 +211,260 @@ def build_knowledge_graph(body_text: str, bibliography: list[dict[str, object]])
     return {"nodes": nodes, "edges": edges}
 
 
+=======
+    """Build a deterministic claim/entity/reference graph using spaCy rule matchers."""
+    sentences = [chunk.strip() for chunk in re.split(r"(?<=[.!?])\s+", body_text) if chunk.strip()]
+    claims = [sentence for sentence in sentences if len(sentence.split()) >= 8][:40]
+
+    nodes: list[dict[str, object]] = []
+    edges: list[dict[str, object]] = []
+    node_index: dict[str, dict[str, object]] = {}
+
+    for reference in bibliography:
+        ref_id = str(reference.get("id", "")).strip()
+        if not ref_id:
+            continue
+        node = {
+            "id": ref_id,
+            "type": "reference",
+            "label": str(reference.get("title", "")).strip() or ref_id,
+            "provenance": {"source": "bibliography", "method": "import"},
+        }
+        nodes.append(node)
+        node_index[ref_id] = node
+
+    extractor = _build_spacy_kg_extractor()
+
+    for claim_index, claim_text in enumerate(claims, start=1):
+        claim_id = f"claim-{claim_index:03d}"
+        claim_node = {
+            "id": claim_id,
+            "type": "claim",
+            "label": claim_text,
+            "provenance": {"source": "body_text", "method": "sentence_split", "sentence_index": claim_index},
+        }
+        nodes.append(claim_node)
+        node_index[claim_id] = claim_node
+
+        entities = _extract_entities_for_claim(extractor=extractor, claim_text=claim_text, claim_id=claim_id)
+        for entity in entities:
+            entity_id = str(entity["id"])
+            if entity_id not in node_index:
+                nodes.append(entity)
+                node_index[entity_id] = entity
+            edges.append(
+                {
+                    "source": claim_id,
+                    "target": entity_id,
+                    "relation": "mentions",
+                    "provenance": entity.get("provenance", {}),
+                }
+            )
+
+        edges.extend(_extract_relations_for_claim(extractor=extractor, claim_text=claim_text, claim_id=claim_id, entities=entities))
+
+        for ref_idx in _citation_indices_from_sentence(claim_text):
+            if 1 <= ref_idx <= len(bibliography):
+                ref_id = str(bibliography[ref_idx - 1].get("id", f"ref-{ref_idx:03d}"))
+                edges.append(
+                    {
+                        "source": claim_id,
+                        "target": ref_id,
+                        "relation": "supported_by",
+                        "provenance": {"source": "citation_marker", "method": "regex", "marker": f"[{ref_idx}]"},
+                    }
+                )
+
+    return {"nodes": nodes, "edges": edges}
+
+
+def _build_spacy_kg_extractor() -> SpacyKGExtractor | None:
+    """Configure spaCy EntityRuler, Matcher, and DependencyMatcher components."""
+    try:
+        import spacy
+        from spacy.matcher import DependencyMatcher, Matcher
+    except Exception:
+        return None
+
+    try:
+        nlp = spacy.load("en_core_web_sm")
+    except Exception:
+        nlp = spacy.blank("en")
+        if "sentencizer" not in nlp.pipe_names:
+            nlp.add_pipe("sentencizer")
+
+    if "entity_ruler" in nlp.pipe_names:
+        entity_ruler = nlp.get_pipe("entity_ruler")
+    else:
+        entity_ruler = nlp.add_pipe("entity_ruler", before="ner" if "ner" in nlp.pipe_names else None)
+
+    entity_ruler.add_patterns(
+        [
+            {"label": "DOMAIN_TERM", "pattern": [{"LOWER": "knowledge"}, {"LOWER": "graph"}]},
+            {"label": "DOMAIN_TERM", "pattern": [{"LOWER": "bibliography"}]},
+            {"label": "DOMAIN_TERM", "pattern": [{"LOWER": "ontology"}]},
+            {"label": "METHOD", "pattern": [{"LOWER": "rule"}, {"LOWER": "based"}]},
+            {"label": "METHOD", "pattern": [{"LOWER": "dependency"}, {"LOWER": "matcher"}]},
+            {"label": "METHOD", "pattern": [{"LOWER": "entityruler"}]},
+            {"label": "CLAIM_VERB", "pattern": [{"LOWER": {"IN": ["supports", "improves", "uses", "causes", "reduces", "increases"]}}]},
+        ]
+    )
+
+    matcher = Matcher(nlp.vocab)
+    matcher.add(
+        "RELATION_VERB",
+        [[{"LOWER": {"IN": ["supports", "improves", "uses", "causes", "reduces", "increases"]}}]],
+    )
+
+    dependency_matcher = DependencyMatcher(nlp.vocab)
+    dependency_matcher.add(
+        "SUBJECT_VERB_OBJECT",
+        [
+            [
+                {"RIGHT_ID": "verb", "RIGHT_ATTRS": {"POS": "VERB"}},
+                {"LEFT_ID": "verb", "REL_OP": ">", "RIGHT_ID": "subject", "RIGHT_ATTRS": {"DEP": {"IN": ["nsubj", "nsubjpass"]}}},
+                {"LEFT_ID": "verb", "REL_OP": ">", "RIGHT_ID": "object", "RIGHT_ATTRS": {"DEP": {"IN": ["dobj", "obj", "pobj"]}}},
+            ]
+        ],
+    )
+
+    return SpacyKGExtractor(
+        nlp=nlp,
+        entity_ruler=entity_ruler,
+        matcher=matcher,
+        dependency_matcher=dependency_matcher,
+    )
+
+
+def _extract_entities_for_claim(extractor: SpacyKGExtractor | None, claim_text: str, claim_id: str) -> list[dict[str, object]]:
+    """Extract entities using EntityRuler + Matcher; produce deterministic node ids."""
+    if extractor is None:
+        return []
+
+    doc = extractor.nlp(claim_text)
+    entity_map: dict[str, dict[str, object]] = {}
+
+    for ent in doc.ents:
+        label = ent.text.strip()
+        if not label:
+            continue
+        entity_id = f"entity-{_slugify(label)}"
+        entity_map[entity_id] = {
+            "id": entity_id,
+            "type": "entity",
+            "label": label,
+            "category": ent.label_,
+            "provenance": {
+                "source": "body_text",
+                "method": "spacy_entityruler",
+                "rule": ent.label_,
+                "claim_id": claim_id,
+                "char_span": [ent.start_char, ent.end_char],
+            },
+        }
+
+    for _, start, end in extractor.matcher(doc):
+        span = doc[start:end]
+        label = span.text.strip()
+        if not label:
+            continue
+        entity_id = f"entity-{_slugify(label)}"
+        if entity_id in entity_map:
+            continue
+        entity_map[entity_id] = {
+            "id": entity_id,
+            "type": "entity",
+            "label": label,
+            "category": "MATCHED_TERM",
+            "provenance": {
+                "source": "body_text",
+                "method": "spacy_matcher",
+                "rule": "RELATION_VERB",
+                "claim_id": claim_id,
+                "char_span": [span.start_char, span.end_char],
+            },
+        }
+
+    return list(entity_map.values())
+
+
+def _extract_relations_for_claim(
+    extractor: SpacyKGExtractor | None,
+    claim_text: str,
+    claim_id: str,
+    entities: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    """Extract deterministic relation edges using Matcher and DependencyMatcher."""
+    if extractor is None or len(entities) < 2:
+        return []
+
+    doc = extractor.nlp(claim_text)
+    sorted_entities = sorted(entities, key=lambda item: str(item.get("label", "")))
+    entity_ids = [str(item.get("id", "")) for item in sorted_entities if item.get("id")]
+    if len(entity_ids) < 2:
+        return []
+
+    edges: list[dict[str, object]] = []
+
+    for _, start, end in extractor.matcher(doc):
+        span = doc[start:end]
+        relation_label = span.text.lower()
+        edges.append(
+            {
+                "source": entity_ids[0],
+                "target": entity_ids[1],
+                "relation": relation_label,
+                "provenance": {
+                    "source": "body_text",
+                    "method": "spacy_matcher",
+                    "rule": "RELATION_VERB",
+                    "claim_id": claim_id,
+                    "char_span": [span.start_char, span.end_char],
+                },
+            }
+        )
+
+    for _, token_ids in extractor.dependency_matcher(doc):
+        if len(token_ids) < 3:
+            continue
+        verb = doc[token_ids[0]]
+        subject = doc[token_ids[1]]
+        obj = doc[token_ids[2]]
+        sub_id = _find_entity_id_for_token(entity_ids, sorted_entities, subject)
+        obj_id = _find_entity_id_for_token(entity_ids, sorted_entities, obj)
+        if not sub_id or not obj_id or sub_id == obj_id:
+            continue
+        edges.append(
+            {
+                "source": sub_id,
+                "target": obj_id,
+                "relation": verb.lemma_.lower() or verb.text.lower(),
+                "provenance": {
+                    "source": "body_text",
+                    "method": "spacy_dependency_matcher",
+                    "rule": "SUBJECT_VERB_OBJECT",
+                    "claim_id": claim_id,
+                    "token_ids": token_ids,
+                },
+            }
+        )
+
+    for edge in edges:
+        edge.setdefault("context", claim_text)
+
+    return edges
+
+
+def _find_entity_id_for_token(entity_ids: list[str], entities: list[dict[str, object]], token: object) -> str:
+    token_text = getattr(token, "text", "").lower().strip()
+    for idx, entity in enumerate(entities):
+        label = str(entity.get("label", "")).lower()
+        if token_text and token_text in label:
+            return entity_ids[idx]
+    return ""
+
+
+>>>>>>> Stashed changes
 def _citation_indices_from_sentence(sentence: str) -> list[int]:
     indices: list[int] = []
     for match in re.findall(r"\[(\d+)\]", sentence):
@@ -208,6 +475,14 @@ def _citation_indices_from_sentence(sentence: str) -> list[int]:
     return indices
 
 
+<<<<<<< Updated upstream
+=======
+def _slugify(value: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+    return slug or "unknown"
+
+
+>>>>>>> Stashed changes
 def build_outline(body_text: str, fallback_title: str) -> dict[str, object]:
     """Create a simple article outline object."""
     paragraphs = [chunk.strip() for chunk in body_text.split("\n\n") if chunk.strip()]
@@ -255,4 +530,7 @@ def build_reverse_prompts(
 
 def _write_json(path: Path, payload: dict[str, object]) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
