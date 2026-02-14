@@ -12,6 +12,15 @@ Install
    source .venv/bin/activate
    pip install -e .[docs]
 
+Python Notebook Walkthrough (No CLI)
+------------------------------------
+
+A notebook tutorial using the same ``examples/`` artifacts is available if you prefer
+working in Jupyter over command-line runs:
+
+- Notebook source: ``examples/colophon_python_api_tutorial.ipynb``
+- Rendered HTML export: :download:`colophon_python_api_tutorial.html <_static/colophon_python_api_tutorial.html>`
+
 Run A Minimal Draft
 -------------------
 

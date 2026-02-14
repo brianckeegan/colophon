@@ -3,6 +3,15 @@ User Guide
 
 This guide focuses on practical Colophon workflows and command patterns.
 
+Notebook Workflow (Python API)
+------------------------------
+
+If you want an end-to-end Colophon walkthrough without using CLI commands, use the
+Jupyter tutorial notebook based on ``examples/`` inputs:
+
+- Notebook source: ``examples/colophon_python_api_tutorial.ipynb``
+- Rendered HTML export: :download:`colophon_python_api_tutorial.html <_static/colophon_python_api_tutorial.html>`
+
 Deconstruct a PDF into input artifacts
 --------------------------------------
 
