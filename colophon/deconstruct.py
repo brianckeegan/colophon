@@ -25,7 +25,7 @@ class SpacyKGExtractor:
     nlp: object
     entity_ruler: object
     matcher: object
-    dependency_matcher: object
+    dependency_matcher: object | None
 
 
 def run_deconstruct(pdf_path: str | Path, output_dir: str | Path = "", stem: str = "") -> DeconstructArtifacts:
@@ -294,17 +294,21 @@ def _build_spacy_kg_extractor() -> SpacyKGExtractor | None:
         [[{"LOWER": {"IN": ["supports", "improves", "uses", "causes", "reduces", "increases"]}}]],
     )
 
-    dependency_matcher = DependencyMatcher(nlp.vocab)
-    dependency_matcher.add(
-        "SUBJECT_VERB_OBJECT",
-        [
+    dependency_matcher: DependencyMatcher | None = None
+    has_pos = "morphologizer" in nlp.pipe_names or "tagger" in nlp.pipe_names
+    has_dep = "parser" in nlp.pipe_names
+    if has_pos and has_dep:
+        dependency_matcher = DependencyMatcher(nlp.vocab)
+        dependency_matcher.add(
+            "SUBJECT_VERB_OBJECT",
             [
-                {"RIGHT_ID": "verb", "RIGHT_ATTRS": {"POS": "VERB"}},
-                {"LEFT_ID": "verb", "REL_OP": ">", "RIGHT_ID": "subject", "RIGHT_ATTRS": {"DEP": {"IN": ["nsubj", "nsubjpass"]}}},
-                {"LEFT_ID": "verb", "REL_OP": ">", "RIGHT_ID": "object", "RIGHT_ATTRS": {"DEP": {"IN": ["dobj", "obj", "pobj"]}}},
-            ]
-        ],
-    )
+                [
+                    {"RIGHT_ID": "verb", "RIGHT_ATTRS": {"POS": "VERB"}},
+                    {"LEFT_ID": "verb", "REL_OP": ">", "RIGHT_ID": "subject", "RIGHT_ATTRS": {"DEP": {"IN": ["nsubj", "nsubjpass"]}}},
+                    {"LEFT_ID": "verb", "REL_OP": ">", "RIGHT_ID": "object", "RIGHT_ATTRS": {"DEP": {"IN": ["dobj", "obj", "pobj"]}}},
+                ]
+            ],
+        )
 
     return SpacyKGExtractor(
         nlp=nlp,
@@ -402,30 +406,31 @@ def _extract_relations_for_claim(
             }
         )
 
-    for _, token_ids in extractor.dependency_matcher(doc):
-        if len(token_ids) < 3:
-            continue
-        verb = doc[token_ids[0]]
-        subject = doc[token_ids[1]]
-        obj = doc[token_ids[2]]
-        sub_id = _find_entity_id_for_token(entity_ids, sorted_entities, subject)
-        obj_id = _find_entity_id_for_token(entity_ids, sorted_entities, obj)
-        if not sub_id or not obj_id or sub_id == obj_id:
-            continue
-        edges.append(
-            {
-                "source": sub_id,
-                "target": obj_id,
-                "relation": verb.lemma_.lower() or verb.text.lower(),
-                "provenance": {
-                    "source": "body_text",
-                    "method": "spacy_dependency_matcher",
-                    "rule": "SUBJECT_VERB_OBJECT",
-                    "claim_id": claim_id,
-                    "token_ids": token_ids,
-                },
-            }
-        )
+    if extractor.dependency_matcher is not None:
+        for _, token_ids in extractor.dependency_matcher(doc):
+            if len(token_ids) < 3:
+                continue
+            verb = doc[token_ids[0]]
+            subject = doc[token_ids[1]]
+            obj = doc[token_ids[2]]
+            sub_id = _find_entity_id_for_token(entity_ids, sorted_entities, subject)
+            obj_id = _find_entity_id_for_token(entity_ids, sorted_entities, obj)
+            if not sub_id or not obj_id or sub_id == obj_id:
+                continue
+            edges.append(
+                {
+                    "source": sub_id,
+                    "target": obj_id,
+                    "relation": verb.lemma_.lower() or verb.text.lower(),
+                    "provenance": {
+                        "source": "body_text",
+                        "method": "spacy_dependency_matcher",
+                        "rule": "SUBJECT_VERB_OBJECT",
+                        "claim_id": claim_id,
+                        "token_ids": token_ids,
+                    },
+                }
+            )
 
     for edge in edges:
         edge.setdefault("context", claim_text)
