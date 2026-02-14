@@ -16,6 +16,10 @@ dependencies = [
   "pymupdf>=1.24",
   "spacy>=3.7"
 >>>>>>> Stashed changes
+=======
+  "pymupdf>=1.24",
+  "spacy>=3.7"
+>>>>>>> Stashed changes
 ]
 
 [project.optional-dependencies]

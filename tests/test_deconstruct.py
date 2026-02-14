@@ -99,6 +99,12 @@ class DeconstructTests(unittest.TestCase):
         self.assertEqual(bibliography[0]["doi"], "10.1234/test")
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+
+if __name__ == "__main__":
+    unittest.main()
+>>>>>>> Stashed changes
 =======
 
 if __name__ == "__main__":
