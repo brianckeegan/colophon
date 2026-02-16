@@ -246,6 +246,38 @@ class CLITests(unittest.TestCase):
 
         self.assertEqual(args.coordination_max_iterations, 6)
 
+    def test_parser_accepts_agent_skills_flags(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(
+            [
+                "--bibliography",
+                "examples/bibliography.json",
+                "--outline",
+                "examples/outline.json",
+                "--graph",
+                "examples/seed_graph.json",
+                "--output",
+                "build/out.md",
+                "--enable-agent-skills",
+                "--agent-skills-dir",
+                "skills",
+                "--agent-skills-dir",
+                "/tmp/shared-skills",
+                "--agent-skills-max-matches",
+                "4",
+                "--agent-skills-min-overlap",
+                "2",
+                "--agent-skills-max-instruction-chars",
+                "6000",
+            ]
+        )
+
+        self.assertTrue(args.enable_agent_skills)
+        self.assertEqual(args.agent_skills_dir, ["skills", "/tmp/shared-skills"])
+        self.assertEqual(args.agent_skills_max_matches, 4)
+        self.assertEqual(args.agent_skills_min_overlap, 2)
+        self.assertEqual(args.agent_skills_max_instruction_chars, 6000)
+
 
     def test_main_dispatches_deconstruct_command(self) -> None:
         from colophon.cli import main

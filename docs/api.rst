@@ -29,6 +29,13 @@ Agents
    :members:
    :undoc-members:
 
+Agent skills
+------------
+
+.. automodule:: colophon.agent_skills
+   :members:
+   :undoc-members:
+
 Coordination
 ------------
 

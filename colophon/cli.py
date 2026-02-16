@@ -268,6 +268,38 @@ def build_parser() -> argparse.ArgumentParser:
         help="Maximum iterative revision passes for coordinator/editor convergence.",
     )
     parser.add_argument(
+        "--enable-agent-skills",
+        action="store_true",
+        help="Enable AgentSkills discovery and section-level skill activation.",
+    )
+    parser.add_argument(
+        "--agent-skills-dir",
+        action="append",
+        default=[],
+        help=(
+            "Root directory containing AgentSkills directories. "
+            "May be specified multiple times."
+        ),
+    )
+    parser.add_argument(
+        "--agent-skills-max-matches",
+        type=int,
+        default=3,
+        help="Maximum AgentSkills activated per section.",
+    )
+    parser.add_argument(
+        "--agent-skills-min-overlap",
+        type=int,
+        default=1,
+        help="Minimum metadata token overlap required to activate an AgentSkill.",
+    )
+    parser.add_argument(
+        "--agent-skills-max-instruction-chars",
+        type=int,
+        default=8000,
+        help="Maximum AgentSkill instruction characters loaded per activated skill.",
+    )
+    parser.add_argument(
         "--enable-paper-recommendations",
         action="store_true",
         help="Enable external related-paper recommendation proposals for bibliography and KG updates.",
@@ -536,6 +568,8 @@ def main(argv: list[str] | None = None) -> int:
                 break
 
     soft_validation_enabled = args.enable_soft_validation
+    agent_skills_enabled = bool(args.enable_agent_skills) or bool(args.agent_skills_dir)
+    agent_skills_dirs = [path.strip() for path in args.agent_skills_dir if str(path).strip()]
 
     pipeline = ColophonPipeline(
         config=PipelineConfig(
@@ -577,6 +611,11 @@ def main(argv: list[str] | None = None) -> int:
             max_soft_validation_findings=max(1, args.max_soft_validation_findings),
             writing_ontology=writing_ontology_payload,
             max_writing_ontology_findings=max(1, args.max_writing_ontology_findings),
+            enable_agent_skills=agent_skills_enabled,
+            agent_skills_dirs=agent_skills_dirs,
+            agent_skills_max_matches_per_section=max(0, args.agent_skills_max_matches),
+            agent_skills_min_token_overlap=max(1, args.agent_skills_min_overlap),
+            agent_skills_max_instruction_chars=max(1, args.agent_skills_max_instruction_chars),
         )
     )
     manuscript = pipeline.run(bibliography=bibliography, outline=outline, graph=graph)

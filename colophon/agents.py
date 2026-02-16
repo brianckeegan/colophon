@@ -704,6 +704,7 @@ class SectionAgent:
         graph: KnowledgeGraph,
         max_figures: int = 3,
         message_bus: MessageBus | None = None,
+        additional_guidance_messages: list[CoordinationMessage] | None = None,
     ) -> Section:
         """Draft.
 
@@ -723,6 +724,8 @@ class SectionAgent:
             Parameter description.
         message_bus : MessageBus | None
             Parameter description.
+        additional_guidance_messages : list[CoordinationMessage] | None
+            Parameter description.
 
         Returns
         -------
@@ -735,6 +738,8 @@ class SectionAgent:
         guidance_messages: list[CoordinationMessage] = []
         if message_bus is not None:
             guidance_messages = message_bus.messages_for("claim_author_agent") + message_bus.messages_for("paragraph_agent")
+        if additional_guidance_messages:
+            guidance_messages.extend(additional_guidance_messages)
         claims = self.claim_agent.draft(
             section_id=section_id,
             section_title=section_title,

@@ -7,6 +7,7 @@ from .coordination import (
     ParagraphCoordinationAgent,
     SectionCoordinationAgent,
 )
+from .agent_skills import AgentSkill, AgentSkillActivation, AgentSkillsRuntime, AgentSkillValidationIssue
 from .agents import OutlineExpanderAgent
 from .kg_update import KGUpdateConfig, KnowledgeGraphGeneratorUpdater
 from .llm import LLMConfig, create_llm_client
@@ -85,6 +86,10 @@ from .vectors import EmbeddingConfig, InMemoryVectorDB, create_embedding_client
 
 __all__ = [
     "BookCoordinationAgent",
+    "AgentSkill",
+    "AgentSkillActivation",
+    "AgentSkillValidationIssue",
+    "AgentSkillsRuntime",
     "Chapter",
     "ChapterCoordinationAgent",
     "Claim",

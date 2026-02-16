@@ -1,5 +1,6 @@
 import unittest
 import json
+import tempfile
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -31,6 +32,17 @@ class _SlowLLMClient:
         if "Write one factual claim sentence" in prompt:
             return "Slow LLM claim."
         return "Slow LLM paragraph."
+
+
+class _PromptCapturingLLMClient:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, str | None]] = []
+
+    def generate(self, prompt: str, system_prompt: str | None = None) -> str:
+        self.calls.append((prompt, system_prompt))
+        if "Write one factual claim sentence" in prompt:
+            return "Skill-guided claim."
+        return "Skill-guided paragraph."
 
 
 class _StubRecommendationClient:
@@ -304,6 +316,59 @@ class PipelineTests(unittest.TestCase):
         paragraph_text = manuscript.chapters[0].sections[0].paragraphs[0].text
         self.assertIn("Pipeline LLM paragraph.", paragraph_text)
         self.assertGreaterEqual(fake_llm.calls, 2)
+
+    def test_pipeline_activates_agent_skills_for_section_drafting(self) -> None:
+        bibliography = [
+            Source(
+                id="s1",
+                title="KG Paper",
+                authors=["A"],
+                year=2022,
+                text="Knowledge graph methods improve factual grounding.",
+            )
+        ]
+        outline = [{"title": "Intro", "sections": ["Knowledge Graph Overview"]}]
+        graph = graph_from_dict({"entities": ["Knowledge Graph"], "relations": []})
+        llm = _PromptCapturingLLMClient()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            skill_root = Path(tmp_dir) / "skills"
+            skill_dir = skill_root / "knowledge-graph-overview"
+            skill_dir.mkdir(parents=True, exist_ok=True)
+            (skill_dir / "SKILL.md").write_text(
+                "\n".join(
+                    [
+                        "---",
+                        "name: knowledge-graph-overview",
+                        "description: Use for knowledge graph overview sections and graph-grounded claims.",
+                        "---",
+                        "Always emphasize graph-grounded evidence and node/edge terminology.",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            pipeline = ColophonPipeline(
+                config=PipelineConfig(
+                    title="AgentSkills Manuscript",
+                    top_k=1,
+                    llm_client=llm,
+                    enable_coordination_agents=False,
+                    enable_agent_skills=True,
+                    agent_skills_dirs=[str(skill_root)],
+                    agent_skills_max_matches_per_section=2,
+                    agent_skills_min_token_overlap=1,
+                )
+            )
+            manuscript = pipeline.run(bibliography=bibliography, outline=outline, graph=graph)
+
+        self.assertTrue(llm.calls)
+        self.assertTrue(any("<available_skills>" in (system_prompt or "") for _, system_prompt in llm.calls))
+        self.assertTrue(any("Activated AgentSkill `knowledge-graph-overview`" in prompt for prompt, _ in llm.calls))
+        skill_diagnostics = manuscript.diagnostics["agent_skills"]
+        self.assertTrue(skill_diagnostics["enabled"])
+        self.assertEqual(skill_diagnostics["available_count"], 1)
+        self.assertTrue(skill_diagnostics["activations_by_section"])
 
     def test_pipeline_references_figures_from_knowledge_graph(self) -> None:
         bibliography = [

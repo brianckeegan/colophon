@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from threading import Lock
 
+from .agent_skills import AgentSkillActivation, AgentSkillsRuntime
 from .agents import (
     CLAIM_TEMPLATE_DEFAULT,
     EMPTY_SECTION_TEMPLATE_DEFAULT,
@@ -31,7 +32,7 @@ from .functional_forms import run_soft_validation, select_functional_form
 from .writing_ontology import build_writing_ontology_context, run_writing_ontology_validation
 from .kg_update import KGUpdateConfig, KnowledgeGraphGeneratorUpdater
 from .llm import LLMClient
-from .models import Chapter, GapRequest, Manuscript, RecommendationProposal, Source
+from .models import Chapter, CoordinationMessage, GapRequest, Manuscript, RecommendationProposal, Source
 from .recommendations import PaperRecommendationWorkflow, PaperSearchClient, RecommendationConfig
 from .retrieval import SimpleRetriever
 
@@ -102,6 +103,16 @@ class PipelineConfig:
         Target language hint.
     coordination_max_revision_iterations : int
         Maximum coordination revision passes.
+    enable_agent_skills : bool
+        Toggle AgentSkills discovery/matching/activation.
+    agent_skills_dirs : list[str]
+        Root directories scanned for AgentSkills ``SKILL.md`` files.
+    agent_skills_max_matches_per_section : int
+        Maximum AgentSkills activated per section.
+    agent_skills_min_token_overlap : int
+        Minimum token overlap used for AgentSkills matching.
+    agent_skills_max_instruction_chars : int
+        Maximum activated instruction characters loaded per skill.
     """
 
     top_k: int = 3
@@ -134,6 +145,11 @@ class PipelineConfig:
     narrative_genre: str = "scholarly_manuscript"
     narrative_language: str = "English"
     coordination_max_revision_iterations: int = 4
+    enable_agent_skills: bool = False
+    agent_skills_dirs: list[str] = field(default_factory=list)
+    agent_skills_max_matches_per_section: int = 3
+    agent_skills_min_token_overlap: int = 1
+    agent_skills_max_instruction_chars: int = 8000
 
 
 @dataclass(slots=True)
@@ -209,6 +225,15 @@ class ColophonPipeline:
         writing_ontology_context = build_writing_ontology_context(
             ontology_payload=self.config.writing_ontology,
             form_id=selected_functional_form_id,
+        )
+        agent_skills_runtime = _build_agent_skills_runtime(self.config)
+        llm_system_prompt = _compose_llm_system_prompt(
+            base_prompt=self.config.llm_system_prompt,
+            available_skills_xml=(
+                agent_skills_runtime.available_skills_xml
+                if agent_skills_runtime is not None
+                else ""
+            ),
         )
 
         if self.config.enable_outline_expander:
@@ -297,7 +322,7 @@ class ColophonPipeline:
                     FIGURE_REFERENCE_TEMPLATE_DEFAULT,
                 ),
                 llm_client=self.config.llm_client,
-                llm_system_prompt=self.config.llm_system_prompt or None,
+                llm_system_prompt=llm_system_prompt or None,
                 tone=narrative_metadata["tone"],
                 style=narrative_metadata["style"],
                 audience=narrative_metadata["audience"],
@@ -319,7 +344,7 @@ class ColophonPipeline:
                     EMPTY_SECTION_TEMPLATE_DEFAULT,
                 ),
                 llm_client=self.config.llm_client,
-                llm_system_prompt=self.config.llm_system_prompt or None,
+                llm_system_prompt=llm_system_prompt or None,
                 tone=narrative_metadata["tone"],
                 style=narrative_metadata["style"],
                 audience=narrative_metadata["audience"],
@@ -340,6 +365,7 @@ class ColophonPipeline:
         kg_update_result = None
         soft_validation_result = None
         writing_ontology_validation_result = None
+        agent_skill_activations_by_section: list[dict[str, object]] = []
         coordination_revision_result = {
             "enabled": self.config.enable_coordination_agents,
             "iterations_run": 0,
@@ -393,6 +419,28 @@ class ColophonPipeline:
                         expected_element_id=expected_element_id,
                     )
                 hits = retriever.search(query=section_title, top_k=self.config.top_k)
+                section_id = f"{chapter_id}-s{section_idx}"
+                skill_activations: list[AgentSkillActivation] = []
+                if agent_skills_runtime is not None:
+                    skill_activations = agent_skills_runtime.match_and_activate(
+                        task=f"{chapter_title}\n{section_title}",
+                        max_matches=max(0, self.config.agent_skills_max_matches_per_section),
+                        min_token_overlap=max(1, self.config.agent_skills_min_token_overlap),
+                    )
+                skill_guidance_messages = _agent_skill_guidance_messages(
+                    activations=skill_activations,
+                    section_id=section_id,
+                )
+                if skill_activations:
+                    agent_skill_activations_by_section.append(
+                        _section_agent_skill_activation_row(
+                            section_id=section_id,
+                            chapter_id=chapter_id,
+                            chapter_title=chapter_title,
+                            section_title=section_title,
+                            activations=skill_activations,
+                        )
+                    )
                 section = section_agent.draft(
                     chapter_id=chapter_id,
                     index=section_idx,
@@ -401,6 +449,7 @@ class ColophonPipeline:
                     graph=graph,
                     max_figures=self.config.max_figures_per_section,
                     message_bus=message_bus if self.config.enable_coordination_agents else None,
+                    additional_guidance_messages=skill_guidance_messages,
                 )
 
                 sections.append(section)
@@ -578,6 +627,12 @@ class ColophonPipeline:
                 "genre": narrative_metadata["genre"],
                 "language": narrative_metadata["language"],
             },
+            "agent_skills": _agent_skills_diagnostics(
+                runtime=agent_skills_runtime,
+                configured_dirs=self.config.agent_skills_dirs,
+                enabled=self.config.enable_agent_skills,
+                activations_by_section=agent_skill_activations_by_section,
+            ),
             "coordination_revision": coordination_revision_result,
         }
 
@@ -589,6 +644,204 @@ class ColophonPipeline:
             gap_requests=gap_requests,
             recommendation_proposals=recommendation_proposals,
         )
+
+
+def _build_agent_skills_runtime(config: PipelineConfig) -> AgentSkillsRuntime | None:
+    """Initialize AgentSkills runtime when enabled and configured.
+
+    Parameters
+    ----------
+    config : PipelineConfig
+        Pipeline configuration.
+
+    Returns
+    -------
+    AgentSkillsRuntime | None
+        Runtime object when AgentSkills are enabled; otherwise ``None``.
+    """
+    if not config.enable_agent_skills:
+        return None
+    directories = [path for path in config.agent_skills_dirs if str(path).strip()]
+    if not directories:
+        return None
+    return AgentSkillsRuntime.from_directories(
+        skill_dirs=directories,
+        max_instruction_chars=max(1, config.agent_skills_max_instruction_chars),
+    )
+
+
+def _compose_llm_system_prompt(base_prompt: str, available_skills_xml: str) -> str:
+    """Compose LLM system prompt with optional AgentSkills metadata block.
+
+    Parameters
+    ----------
+    base_prompt : str
+        Existing configured system prompt.
+    available_skills_xml : str
+        ``<available_skills>`` block for metadata-only skill listing.
+
+    Returns
+    -------
+    str
+        Effective system prompt.
+    """
+    normalized_base = _string(base_prompt)
+    normalized_xml = _string(available_skills_xml)
+    if not normalized_xml:
+        return normalized_base
+    if not normalized_base:
+        return normalized_xml
+    return f"{normalized_base}\n\n{normalized_xml}"
+
+
+def _agent_skill_guidance_messages(
+    activations: list[AgentSkillActivation],
+    section_id: str,
+) -> list[CoordinationMessage]:
+    """Render activated skill instructions as section guidance messages.
+
+    Parameters
+    ----------
+    activations : list[AgentSkillActivation]
+        Activated skills for this section.
+    section_id : str
+        Section identifier.
+
+    Returns
+    -------
+    list[CoordinationMessage]
+        Guidance messages consumed by claim/paragraph drafting agents.
+    """
+    messages: list[CoordinationMessage] = []
+    for activation in activations:
+        content = (
+            f"Activated AgentSkill `{activation.skill.name}` from {activation.skill.skill_md_path}.\n"
+            "Use these instructions only when relevant to the current section:\n"
+            f"{activation.instructions}"
+        )
+        messages.append(
+            CoordinationMessage(
+                sender="agent_skills",
+                receiver="claim_author_agent",
+                message_type="skill_instruction",
+                content=content,
+                related_id=section_id,
+                priority="normal",
+            )
+        )
+        messages.append(
+            CoordinationMessage(
+                sender="agent_skills",
+                receiver="paragraph_agent",
+                message_type="skill_instruction",
+                content=content,
+                related_id=section_id,
+                priority="normal",
+            )
+        )
+    return messages
+
+
+def _section_agent_skill_activation_row(
+    section_id: str,
+    chapter_id: str,
+    chapter_title: str,
+    section_title: str,
+    activations: list[AgentSkillActivation],
+) -> dict[str, object]:
+    """Serialize one section's activated AgentSkills for diagnostics.
+
+    Parameters
+    ----------
+    section_id : str
+        Section identifier.
+    chapter_id : str
+        Parent chapter identifier.
+    chapter_title : str
+        Parent chapter title.
+    section_title : str
+        Section title.
+    activations : list[AgentSkillActivation]
+        Activated skills.
+
+    Returns
+    -------
+    dict[str, object]
+        Diagnostics payload for this section.
+    """
+    return {
+        "section_id": section_id,
+        "chapter_id": chapter_id,
+        "chapter_title": chapter_title,
+        "section_title": section_title,
+        "skills": [
+            {
+                "name": activation.skill.name,
+                "description": activation.skill.description,
+                "location": activation.skill.skill_md_path,
+                "matched_tokens": activation.matched_tokens,
+                "score": activation.score,
+            }
+            for activation in activations
+        ],
+    }
+
+
+def _agent_skills_diagnostics(
+    runtime: AgentSkillsRuntime | None,
+    configured_dirs: list[str],
+    enabled: bool,
+    activations_by_section: list[dict[str, object]],
+) -> dict[str, object]:
+    """Build aggregate AgentSkills diagnostics payload.
+
+    Parameters
+    ----------
+    runtime : AgentSkillsRuntime | None
+        AgentSkills runtime object.
+    configured_dirs : list[str]
+        Configured root directories.
+    enabled : bool
+        AgentSkills flag.
+    activations_by_section : list[dict[str, object]]
+        Section activation diagnostics.
+
+    Returns
+    -------
+    dict[str, object]
+        Diagnostics summary.
+    """
+    invalid_rows: list[dict[str, object]] = []
+    available_skills: list[dict[str, str]] = []
+    available_xml = ""
+    if runtime is not None:
+        invalid_rows = [
+            {
+                "skill_dir": issue.skill_dir,
+                "skill_md_path": issue.skill_md_path,
+                "errors": issue.errors,
+            }
+            for issue in runtime.invalid_skills
+        ]
+        available_skills = [
+            {
+                "name": skill.name,
+                "description": skill.description,
+                "location": skill.skill_md_path,
+            }
+            for skill in runtime.skills
+        ]
+        available_xml = runtime.available_skills_xml
+    return {
+        "enabled": enabled,
+        "configured_dirs": [path for path in configured_dirs if _string(path)],
+        "loaded": runtime is not None,
+        "available_count": len(available_skills),
+        "available_skills": available_skills,
+        "available_skills_xml": available_xml,
+        "invalid_skills": invalid_rows,
+        "activations_by_section": activations_by_section,
+    }
 
 
 def _message_to_dict(message) -> dict:
