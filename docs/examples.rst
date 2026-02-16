@@ -12,7 +12,7 @@ Example Inputs
 - Outlines: ``examples/outline.json``, ``examples/outline_preliminary.json``
 - Knowledge graph seeds: ``examples/seed_graph.json``, ``examples/graph_edges.csv``, ``examples/graph_dump.sql``
 - Prompt templates: ``examples/prompts.json``
-- LLM configs: ``examples/llm_openai.json``, ``examples/llm_codex.json``, ``examples/llm_claude.json``, ``examples/llm_copilot.json``
+- LLM configs: ``examples/llm_openai.json``, ``examples/llm_codex.json``, ``examples/llm_claude.json``, ``examples/llm_copilot.json``, ``examples/llm_pi.json``
 - Recommendation configs: ``examples/recommendation_openalex.json``, ``examples/recommendation_semantic_scholar.json``
 - KG update configs: ``examples/kg_update_local.json``, ``examples/kg_update_openai.json``
 - Note-import sources: ``examples/notes/``

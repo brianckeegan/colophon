@@ -362,6 +362,46 @@ class CLITests(unittest.TestCase):
             self.assertEqual(config.system_prompt, "system")
             self.assertEqual(config.max_tokens, 333)
 
+    def test_resolve_llm_config_preserves_pi_specific_fields_from_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            config_path = Path(tmp_dir) / "llm_pi.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "llm": {
+                            "provider": "pi",
+                            "model": "anthropic/claude-test",
+                            "pi_binary": "pi",
+                            "pi_provider": "anthropic",
+                            "pi_no_session": False,
+                            "pi_coordination_memory": 16,
+                            "pi_extra_args": ["--session-dir", "/tmp/pi-sessions"],
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            args = Namespace(
+                llm_config=str(config_path),
+                llm_provider=None,
+                llm_model=None,
+                llm_api_base_url=None,
+                llm_api_key_env=None,
+                llm_system_prompt=None,
+                llm_temperature=None,
+                llm_max_tokens=None,
+                llm_timeout_seconds=None,
+            )
+            config = _resolve_llm_config(args)
+
+            self.assertEqual(config.provider, "pi")
+            self.assertEqual(config.pi_binary, "pi")
+            self.assertEqual(config.pi_provider, "anthropic")
+            self.assertFalse(config.pi_no_session)
+            self.assertEqual(config.pi_coordination_memory, 16)
+            self.assertEqual(config.pi_extra_args, ["--session-dir", "/tmp/pi-sessions"])
+
     def test_resolve_recommendation_config(self) -> None:
         args = Namespace(
             recommendation_config="",

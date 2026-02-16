@@ -447,6 +447,11 @@ def load_llm_config(path: str | Path) -> LLMConfig:
         timeout_seconds=_float_or_default(raw.get("timeout_seconds"), 30.0),
         system_prompt=_string_or_default(raw.get("system_prompt"), ""),
         extra_headers=_dict_str_str(raw.get("extra_headers")),
+        pi_binary=_string_or_default(raw.get("pi_binary"), "pi"),
+        pi_provider=_string_or_default(raw.get("pi_provider"), ""),
+        pi_no_session=bool(raw.get("pi_no_session", True)),
+        pi_coordination_memory=max(0, _int_or_default(raw.get("pi_coordination_memory"), 24)),
+        pi_extra_args=_string_list(raw.get("pi_extra_args")),
     )
 
 
@@ -1534,6 +1539,30 @@ def _dict_str_str(value: object) -> dict[str, str]:
         if isinstance(key, str) and isinstance(item, str):
             result[key] = item
     return result
+
+
+def _string_list(value: object) -> list[str]:
+    """String list.
+
+    Parameters
+    ----------
+    value : object
+        Parameter description.
+
+    Returns
+    -------
+    list[str]
+        Return value description.
+    """
+    if not isinstance(value, list):
+        return []
+    output: list[str] = []
+    for item in value:
+        if isinstance(item, str):
+            cleaned = item.strip()
+            if cleaned:
+                output.append(cleaned)
+    return output
 
 
 def _split_entities(value: str) -> list[str]:

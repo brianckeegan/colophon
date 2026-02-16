@@ -81,7 +81,7 @@ CLI arguments
 - ``deconstruct --stem``: output filename stem for generated artifacts.
 - ``--artifacts-dir``: optional directory containing uploaded artifacts; missing bibliography/outline/graph/prompts paths are auto-discovered.
 - ``--llm-config``: optional LLM config JSON.
-- ``--llm-provider``: ``none``, ``openai``, ``codex``, ``openai_compatible``, ``anthropic``, ``claude``, ``github``, ``copilot``.
+- ``--llm-provider``: ``none``, ``pi``/``pi-mono``, ``openai``, ``codex``, ``openai_compatible``, ``anthropic``, ``claude``, ``github``, ``copilot``.
 - ``--llm-model``: model name for API calls.
 - ``--llm-api-base-url``: API base URL override.
 - ``--llm-api-key-env``: environment variable containing API key/token.
@@ -755,6 +755,22 @@ GitHub/Copilot-style config:
        "api_base_url": "https://models.inference.ai.azure.com"
      }
    }
+
+pi-mono coding-agent config (provider/model orchestration + shared coordination context):
+
+.. code-block:: json
+
+   {
+     "llm": {
+       "provider": "pi",
+       "model": "anthropic/claude-sonnet-4-20250514",
+       "pi_binary": "pi",
+       "pi_no_session": true,
+       "pi_coordination_memory": 32
+     }
+   }
+
+This requires the ``pi`` binary from ``@mariozechner/pi-coding-agent`` to be installed and available on ``PATH``.
 
 Output formats
 --------------

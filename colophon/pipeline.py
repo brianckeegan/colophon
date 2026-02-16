@@ -248,7 +248,7 @@ class ColophonPipeline:
                         effective_prompts.setdefault(key, value)
 
         retriever = SimpleRetriever(bibliography)
-        message_bus = MessageBus()
+        message_bus = MessageBus(message_observer=_coordination_message_observer(self.config.llm_client))
         if self.config.enable_coordination_agents:
             _seed_writing_ontology_messages(message_bus=message_bus, context=writing_ontology_context)
             _seed_genre_ontology_messages(message_bus=message_bus, context=genre_context)
@@ -1265,6 +1265,27 @@ def _functional_form_element_lookup(functional_form: dict[str, object]) -> dict[
             continue
         mapping[element_id] = _string(row.get("label")) or _humanize_identifier(element_id)
     return mapping
+
+
+def _coordination_message_observer(llm_client: LLMClient | None):
+    """Return optional coordination message observer from the active LLM client.
+
+    Parameters
+    ----------
+    llm_client : LLMClient | None
+        Active LLM client instance.
+
+    Returns
+    -------
+    object
+        Callable observer when supported, otherwise ``None``.
+    """
+    if llm_client is None:
+        return None
+    observer = getattr(llm_client, "record_coordination_message", None)
+    if callable(observer):
+        return observer
+    return None
 
 
 def _coerce_mapping(value: object) -> dict[str, object]:

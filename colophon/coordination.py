@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from threading import RLock
-from typing import Any
+from typing import Any, Callable
 
 from .models import Chapter, CoordinationMessage, GapRequest, Section
 
@@ -14,6 +14,11 @@ class MessageBus:
     """In-memory message channel for parent/child hand-offs between agents."""
 
     _messages: list[CoordinationMessage] = field(default_factory=list, repr=False)
+    message_observer: Callable[[CoordinationMessage], None] | None = field(
+        default=None,
+        repr=False,
+        compare=False,
+    )
     _lock: RLock = field(default_factory=RLock, init=False, repr=False, compare=False)
 
     @property
@@ -74,7 +79,15 @@ class MessageBus:
                 priority=priority,
             )
             self._messages.append(message)
-            return message
+            observer = self.message_observer
+
+        if observer is not None:
+            try:
+                observer(message)
+            except Exception:
+                # Coordination observers are best-effort and must not break message delivery.
+                pass
+        return message
 
     def messages_for(self, receiver: str) -> list[CoordinationMessage]:
         """Messages for.

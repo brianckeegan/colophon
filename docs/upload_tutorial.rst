@@ -19,7 +19,7 @@ Minimum required files:
 Recommended upload set (for additional workflows):
 
 - ``outline_preliminary.json``
-- ``llm_openai.json`` / ``llm_codex.json`` / ``llm_claude.json``
+- ``llm_openai.json`` / ``llm_codex.json`` / ``llm_claude.json`` / ``llm_pi.json``
 - ``recommendation_openalex.json``
 - ``recommendation_semantic_scholar.json``
 - ``kg_update_local.json``

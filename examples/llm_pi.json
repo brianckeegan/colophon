@@ -1,0 +1,9 @@
+{
+  "llm": {
+    "provider": "pi",
+    "model": "anthropic/claude-sonnet-4-20250514",
+    "pi_binary": "pi",
+    "pi_no_session": true,
+    "pi_coordination_memory": 32
+  }
+}

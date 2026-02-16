@@ -58,6 +58,16 @@ class CoordinationTests(unittest.TestCase):
         self.assertEqual(len(snapshot), 2)
         self.assertEqual(len(bus.messages), 1)
 
+    def test_message_bus_calls_observer_for_new_messages(self) -> None:
+        observed: list[CoordinationMessage] = []
+        bus = MessageBus(message_observer=observed.append)
+
+        bus.send("section", "paragraph", "guidance", "Write clearly")
+        bus.send("section", "paragraph", "guidance", "Write clearly")
+
+        self.assertEqual(len(observed), 1)
+        self.assertEqual(observed[0].content, "Write clearly")
+
     def test_message_bus_threadsafe_dedupe_under_parallel_send(self) -> None:
         bus = MessageBus()
         workers = 16

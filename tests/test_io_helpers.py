@@ -304,6 +304,35 @@ class IOHelperTests(unittest.TestCase):
             self.assertEqual(config.max_tokens, 256)
             self.assertEqual(config.extra_headers["X-Test"], "true")
 
+    def test_load_llm_config_supports_pi_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            llm_path = Path(tmp_dir) / "llm_pi.json"
+            llm_path.write_text(
+                json.dumps(
+                    {
+                        "llm": {
+                            "provider": "pi",
+                            "model": "anthropic/claude-test",
+                            "pi_binary": "pi",
+                            "pi_provider": "anthropic",
+                            "pi_no_session": False,
+                            "pi_coordination_memory": 42,
+                            "pi_extra_args": ["--session-dir", "/tmp/pi-session"],
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            config = load_llm_config(llm_path)
+
+            self.assertEqual(config.provider, "pi")
+            self.assertEqual(config.pi_binary, "pi")
+            self.assertEqual(config.pi_provider, "anthropic")
+            self.assertFalse(config.pi_no_session)
+            self.assertEqual(config.pi_coordination_memory, 42)
+            self.assertEqual(config.pi_extra_args, ["--session-dir", "/tmp/pi-session"])
+
     def test_load_recommendation_config_from_wrapped_payload(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             config_path = Path(tmp_dir) / "recommendation.json"

@@ -117,7 +117,19 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--llm-config", help="Optional LLM config JSON file.")
     parser.add_argument(
         "--llm-provider",
-        choices=("none", "openai", "codex", "openai_compatible", "anthropic", "claude", "github", "copilot"),
+        choices=(
+            "none",
+            "pi",
+            "pi_mono",
+            "pi-mono",
+            "openai",
+            "codex",
+            "openai_compatible",
+            "anthropic",
+            "claude",
+            "github",
+            "copilot",
+        ),
         help="LLM provider alias. If omitted, deterministic templates are used.",
     )
     parser.add_argument("--llm-model", help="LLM model name for API calls.")
@@ -855,7 +867,12 @@ def _resolve_llm_config(args: argparse.Namespace) -> LLMConfig:
         max_tokens=max_tokens,
         timeout_seconds=timeout_seconds,
         system_prompt=system_prompt,
-        extra_headers=base.extra_headers,
+        extra_headers=dict(base.extra_headers),
+        pi_binary=base.pi_binary,
+        pi_provider=base.pi_provider,
+        pi_no_session=base.pi_no_session,
+        pi_coordination_memory=base.pi_coordination_memory,
+        pi_extra_args=list(base.pi_extra_args),
     )
 
 

@@ -3,7 +3,7 @@ import os
 import unittest
 from unittest.mock import patch
 
-from colophon.llm import AnthropicClient, LLMConfig, LLMError, OpenAICompatibleClient, create_llm_client
+from colophon.llm import AnthropicClient, LLMConfig, LLMError, OpenAICompatibleClient, PiMonoClient, create_llm_client
 
 
 class _FakeResponse:
@@ -20,6 +20,104 @@ class _FakeResponse:
         return None
 
 
+class _FakePipeReader:
+    def __init__(self, process: "_FakePiProcess") -> None:
+        self._process = process
+
+    def readline(self) -> str:
+        if self._process.output_lines:
+            return self._process.output_lines.pop(0)
+        return ""
+
+
+class _FakePipeWriter:
+    def __init__(self, process: "_FakePiProcess") -> None:
+        self._process = process
+
+    def write(self, data: str) -> int:
+        for line in data.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            payload = json.loads(line)
+            self._process.commands.append(payload)
+            command_type = payload.get("type")
+            if command_type == "prompt":
+                request_id = payload.get("id")
+                if self._process.prompt_success:
+                    self._process.output_lines.extend(
+                        [
+                            json.dumps(
+                                {
+                                    "id": request_id,
+                                    "type": "response",
+                                    "command": "prompt",
+                                    "success": True,
+                                }
+                            )
+                            + "\n",
+                            json.dumps(
+                                {
+                                    "type": "message_update",
+                                    "assistantMessageEvent": {"type": "text_delta", "delta": "Hello from pi"},
+                                }
+                            )
+                            + "\n",
+                            json.dumps(
+                                {
+                                    "type": "agent_end",
+                                    "messages": [{"role": "assistant", "content": [{"type": "text", "text": "Hello from pi"}]}],
+                                }
+                            )
+                            + "\n",
+                        ]
+                    )
+                else:
+                    self._process.output_lines.append(
+                        json.dumps(
+                            {
+                                "id": request_id,
+                                "type": "response",
+                                "command": "prompt",
+                                "success": False,
+                                "error": "boom",
+                            }
+                        )
+                        + "\n"
+                    )
+        return len(data)
+
+    def flush(self) -> None:
+        return None
+
+
+class _FakePipeErr:
+    def read(self) -> str:
+        return ""
+
+
+class _FakePiProcess:
+    def __init__(self, prompt_success: bool = True) -> None:
+        self.prompt_success = prompt_success
+        self.output_lines: list[str] = []
+        self.commands: list[dict] = []
+        self.stdin = _FakePipeWriter(self)
+        self.stdout = _FakePipeReader(self)
+        self.stderr = _FakePipeErr()
+
+    def poll(self):
+        return None
+
+    def terminate(self) -> None:
+        return None
+
+    def wait(self, timeout: float | None = None) -> None:
+        return None
+
+    def kill(self) -> None:
+        return None
+
+
 class LLMTests(unittest.TestCase):
     def test_create_llm_client_returns_none_when_disabled(self) -> None:
         config = LLMConfig(provider="none")
@@ -29,10 +127,12 @@ class LLMTests(unittest.TestCase):
         openai_client = create_llm_client(LLMConfig(provider="openai", model="gpt-test"))
         anthropic_client = create_llm_client(LLMConfig(provider="claude", model="claude-test"))
         copilot_client = create_llm_client(LLMConfig(provider="copilot", model="gpt-test"))
+        pi_client = create_llm_client(LLMConfig(provider="pi", model="anthropic/claude-test"))
 
         self.assertIsInstance(openai_client, OpenAICompatibleClient)
         self.assertIsInstance(anthropic_client, AnthropicClient)
         self.assertIsInstance(copilot_client, OpenAICompatibleClient)
+        self.assertIsInstance(pi_client, PiMonoClient)
 
     @patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}, clear=False)
     @patch("colophon.llm.request.urlopen")
@@ -77,6 +177,45 @@ class LLMTests(unittest.TestCase):
 
         with self.assertRaises(LLMError):
             client.generate(prompt="Hello")
+
+    @patch("colophon.llm.subprocess.Popen")
+    @patch("colophon.llm.shutil.which")
+    def test_pi_mono_generate_parses_rpc_events(self, mock_which, mock_popen) -> None:
+        process = _FakePiProcess(prompt_success=True)
+        mock_which.return_value = "/usr/local/bin/pi"
+        mock_popen.return_value = process
+        client = PiMonoClient(
+            LLMConfig(
+                provider="pi",
+                model="anthropic/claude-test",
+                timeout_seconds=2.0,
+            )
+        )
+        client.record_coordination_message("section_coordinator->claim_author_agent [guidance] (normal): stay concise")
+
+        result = client.generate("Draft a paragraph.")
+
+        self.assertEqual(result, "Hello from pi")
+        prompt_command = next(command for command in process.commands if command.get("type") == "prompt")
+        self.assertIn("Coordination context:", prompt_command.get("message", ""))
+
+    @patch("colophon.llm.shutil.which")
+    def test_pi_mono_generate_raises_when_binary_missing(self, mock_which) -> None:
+        mock_which.return_value = None
+        client = PiMonoClient(LLMConfig(provider="pi", model="anthropic/claude-test"))
+        with self.assertRaises(LLMError):
+            client.generate("Draft a paragraph.")
+
+    @patch("colophon.llm.subprocess.Popen")
+    @patch("colophon.llm.shutil.which")
+    def test_pi_mono_generate_raises_on_rpc_error(self, mock_which, mock_popen) -> None:
+        process = _FakePiProcess(prompt_success=False)
+        mock_which.return_value = "/usr/local/bin/pi"
+        mock_popen.return_value = process
+        client = PiMonoClient(LLMConfig(provider="pi", model="anthropic/claude-test", timeout_seconds=1.0))
+
+        with self.assertRaises(LLMError):
+            client.generate("Draft a paragraph.")
 
 
 if __name__ == "__main__":
