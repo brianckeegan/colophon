@@ -5,12 +5,12 @@ from pathlib import Path
 from unittest.mock import patch
 
 from colophon.deconstruct import (
-    _build_spacy_kg_extractor,
     build_bibliography,
     build_knowledge_graph,
     build_outline,
     build_reverse_prompts,
     extract_reference_entries,
+    preprocess_pdf_text,
     run_deconstruct,
     split_reference_section,
 )
@@ -38,24 +38,40 @@ class DeconstructTests(unittest.TestCase):
         self.assertTrue(graph["edges"])
         self.assertTrue(any(edge.get("relation") == "supported_by" for edge in graph["edges"]))
         self.assertTrue(any("provenance" in edge for edge in graph["edges"]))
+        self.assertTrue(any(node.get("type") == "claim" for node in graph["nodes"]))
+        self.assertTrue(any(node.get("type") == "reference" for node in graph["nodes"]))
 
-    def test_build_knowledge_graph_entity_edges_are_deterministic(self) -> None:
+    def test_build_knowledge_graph_edges_are_deterministic(self) -> None:
         bibliography = [{"id": "ref-001", "title": "Paper A"}]
         text = "The knowledge graph supports bibliography alignment and improves synthesis quality for researchers."
         graph_first = build_knowledge_graph(text, bibliography)
         graph_second = build_knowledge_graph(text, bibliography)
 
-        entity_nodes_first = [node for node in graph_first["nodes"] if node.get("type") == "entity"]
-        entity_nodes_second = [node for node in graph_second["nodes"] if node.get("type") == "entity"]
-        self.assertEqual([node["id"] for node in entity_nodes_first], [node["id"] for node in entity_nodes_second])
+        self.assertEqual(graph_first["nodes"], graph_second["nodes"])
+        self.assertEqual(graph_first["edges"], graph_second["edges"])
 
-    def test_spacy_extractor_builds_or_falls_back(self) -> None:
-        extractor = _build_spacy_kg_extractor()
-        if extractor is None:
-            self.assertIsNone(extractor)
-        else:
-            self.assertTrue(hasattr(extractor, "matcher"))
-            self.assertTrue(hasattr(extractor, "dependency_matcher"))
+    @patch("colophon.deconstruct._extract_pdf_text_with_pymupdf")
+    @patch("colophon.deconstruct._extract_pdf_text_with_kreuzberg")
+    def test_preprocess_pdf_text_prefers_kreuzberg(self, mock_kreuzberg, mock_pymupdf) -> None:
+        mock_kreuzberg.return_value = "Line one.\n\nLine two."
+        text = preprocess_pdf_text("fake.pdf")
+        self.assertEqual(text, "Line one.\n\nLine two.")
+        mock_pymupdf.assert_not_called()
+
+    @patch("colophon.deconstruct._extract_pdf_text_with_pymupdf")
+    @patch("colophon.deconstruct._extract_pdf_text_with_kreuzberg")
+    def test_preprocess_pdf_text_falls_back_to_pymupdf(self, mock_kreuzberg, mock_pymupdf) -> None:
+        mock_kreuzberg.side_effect = RuntimeError("kreuzberg unavailable")
+        mock_pymupdf.return_value = "Fallback content."
+        text = preprocess_pdf_text("fake.pdf")
+        self.assertEqual(text, "Fallback content.")
+
+    @patch("colophon.deconstruct._build_knowledge_graph_with_sift")
+    def test_build_knowledge_graph_uses_fallback_when_sift_fails(self, mock_sift_build) -> None:
+        mock_sift_build.side_effect = RuntimeError("sift missing")
+        graph = build_knowledge_graph("A sufficiently long sentence to be treated as a claim [1].", [{"id": "ref-001"}])
+        self.assertEqual(graph["metadata"]["backend"], "fallback")
+        self.assertIn("fallback_reason", graph["metadata"])
 
     def test_build_outline_and_prompts(self) -> None:
         outline = build_outline("Paper title\n\nIntro paragraph.\n\nSecond paragraph.", "fallback")

@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
+import inspect
 import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 from urllib import parse, request
 
 
@@ -17,15 +20,6 @@ class DeconstructArtifacts:
     knowledge_graph_path: Path
     outline_path: Path
     prompts_path: Path
-
-@dataclass(slots=True)
-class SpacyKGExtractor:
-    """Container for deterministic spaCy rule-based extraction components."""
-
-    nlp: object
-    entity_ruler: object
-    matcher: object
-    dependency_matcher: object | None
 
 
 def run_deconstruct(pdf_path: str | Path, output_dir: str | Path = "", stem: str = "") -> DeconstructArtifacts:
@@ -65,16 +59,103 @@ def run_deconstruct(pdf_path: str | Path, output_dir: str | Path = "", stem: str
 
 
 def preprocess_pdf_text(pdf_path: str | Path) -> str:
-    """Extract and lightly normalize PDF text using PyMuPDF."""
+    """Extract and normalize PDF text using Kreuzberg, with PyMuPDF fallback."""
+    source_path = Path(pdf_path)
+    try:
+        raw_text = _extract_pdf_text_with_kreuzberg(source_path)
+    except Exception:
+        try:
+            raw_text = _extract_pdf_text_with_pymupdf(source_path)
+        except Exception as pymupdf_error:
+            raise RuntimeError(
+                "PDF extraction failed via Kreuzberg and PyMuPDF fallback. "
+                "Install `kreuzberg` (preferred) or `pymupdf`."
+            ) from pymupdf_error
+    return _clean_text(raw_text)
+
+
+def _extract_pdf_text_with_kreuzberg(pdf_path: Path) -> str:
+    try:
+        import kreuzberg  # type: ignore
+    except Exception as exc:
+        raise RuntimeError("Kreuzberg is not installed.") from exc
+
+    extraction_result = _invoke_kreuzberg_extractor(module=kreuzberg, pdf_path=pdf_path)
+    text = _extract_content_from_kreuzberg_result(extraction_result)
+    if not text.strip():
+        raise RuntimeError("Kreuzberg returned empty content.")
+    return text
+
+
+def _invoke_kreuzberg_extractor(module: object, pdf_path: Path) -> object:
+    extractor_names = ("extract_file_sync", "extract_file_content", "extract_file")
+    for name in extractor_names:
+        extractor = getattr(module, name, None)
+        if not callable(extractor):
+            continue
+        result = extractor(str(pdf_path))
+        if inspect.isawaitable(result):
+            return _await_kreuzberg_result(result)
+        return result
+    raise RuntimeError("Could not find a supported Kreuzberg extraction function.")
+
+
+def _await_kreuzberg_result(awaitable: object) -> object:
+    if not inspect.isawaitable(awaitable):
+        return awaitable
+    try:
+        return asyncio.run(awaitable)
+    except RuntimeError as exc:
+        raise RuntimeError(
+            "Kreuzberg returned an async extractor result, but no synchronous event-loop handoff is available."
+        ) from exc
+
+
+def _extract_content_from_kreuzberg_result(result: object) -> str:
+    if isinstance(result, str):
+        return result
+
+    if isinstance(result, dict):
+        content = result.get("content")
+        if isinstance(content, str) and content.strip():
+            return content
+
+    content_attr = getattr(result, "content", None)
+    if isinstance(content_attr, str) and content_attr.strip():
+        return content_attr
+
+    to_markdown = getattr(result, "to_markdown", None)
+    if callable(to_markdown):
+        markdown = to_markdown()
+        if isinstance(markdown, str) and markdown.strip():
+            return markdown
+
+    pages = getattr(result, "pages", None)
+    if isinstance(pages, list):
+        page_contents: list[str] = []
+        for page in pages:
+            if isinstance(page, dict):
+                value = page.get("content")
+            else:
+                value = getattr(page, "content", None)
+            if isinstance(value, str) and value.strip():
+                page_contents.append(value)
+        if page_contents:
+            return "\n\n".join(page_contents)
+
+    raise RuntimeError("Kreuzberg extraction result did not expose text content.")
+
+
+def _extract_pdf_text_with_pymupdf(pdf_path: Path) -> str:
     try:
         import fitz  # type: ignore
-    except Exception as exc:  # pragma: no cover - dependency import path
-        raise RuntimeError("PyMuPDF is required for deconstruct. Install pymupdf.") from exc
+    except Exception as exc:
+        raise RuntimeError("PyMuPDF is not installed.") from exc
 
     document = fitz.open(str(pdf_path))
     page_texts = [page.get_text("text") for page in document]
     document.close()
-    return _clean_text("\n".join(page_texts))
+    return "\n".join(page_texts)
 
 
 def _clean_text(raw_text: str) -> str:
@@ -142,7 +223,11 @@ def _parse_reference(reference: str) -> dict[str, object]:
     year = int(year_match.group(0)) if year_match else None
     author_match = re.match(r"^([^\.]+)\.", reference)
     title_match = re.search(r"\.\s+([^\.]+)\.", reference)
-    authors = [chunk.strip() for chunk in re.split(r";| and |,", author_match.group(1)) if chunk.strip()] if author_match else []
+    authors = (
+        [chunk.strip() for chunk in re.split(r";| and |,", author_match.group(1)) if chunk.strip()]
+        if author_match
+        else []
+    )
     title = title_match.group(1).strip() if title_match else reference[:160]
     venue = ""
     if title_match:
@@ -170,10 +255,10 @@ def _lookup_openalex(title: str) -> dict[str, object]:
     authorships = record.get("authorships", [])
     authors: list[str] = []
     if isinstance(authorships, list):
-        for authorhip in authorships:
-            if not isinstance(authorhip, dict):
+        for authorship in authorships:
+            if not isinstance(authorship, dict):
                 continue
-            author = authorhip.get("author", {})
+            author = authorship.get("author", {})
             if isinstance(author, dict) and isinstance(author.get("display_name"), str):
                 authors.append(author["display_name"])
     return {
@@ -190,261 +275,387 @@ def _lookup_openalex(title: str) -> dict[str, object]:
 
 
 def build_knowledge_graph(body_text: str, bibliography: list[dict[str, object]]) -> dict[str, object]:
-    """Build a deterministic claim/entity/reference graph using spaCy rule matchers."""
-    sentences = [chunk.strip() for chunk in re.split(r"(?<=[.!?])\s+", body_text) if chunk.strip()]
-    claims = [sentence for sentence in sentences if len(sentence.split()) >= 8][:40]
+    """Build a deterministic claim/reference graph using sift-kg with fallback."""
+    try:
+        graph = _build_knowledge_graph_with_sift(body_text=body_text, bibliography=bibliography)
+    except Exception as exc:
+        graph = _build_knowledge_graph_fallback(body_text=body_text, bibliography=bibliography)
+        metadata = graph.setdefault("metadata", {})
+        metadata["backend"] = "fallback"
+        metadata["fallback_reason"] = str(exc)
+    return graph
 
-    nodes: list[dict[str, object]] = []
-    edges: list[dict[str, object]] = []
-    node_index: dict[str, dict[str, object]] = {}
 
-    for reference in bibliography:
-        ref_id = str(reference.get("id", "")).strip()
-        if not ref_id:
-            continue
-        node = {
-            "id": ref_id,
-            "type": "reference",
-            "label": str(reference.get("title", "")).strip() or ref_id,
-            "provenance": {"source": "bibliography", "method": "import"},
-        }
-        nodes.append(node)
-        node_index[ref_id] = node
+def _build_knowledge_graph_with_sift(body_text: str, bibliography: list[dict[str, object]]) -> dict[str, object]:
+    try:
+        from sift_kg import KnowledgeGraph as SiftKnowledgeGraph  # type: ignore
+    except Exception as exc:
+        raise RuntimeError("sift-kg is not installed.") from exc
 
-    extractor = _build_spacy_kg_extractor()
+    graph = SiftKnowledgeGraph()
+    reference_nodes: list[str] = []
+    relation_counter = 0
 
-    for claim_index, claim_text in enumerate(claims, start=1):
-        claim_id = f"claim-{claim_index:03d}"
-        claim_node = {
-            "id": claim_id,
-            "type": "claim",
-            "label": claim_text,
-            "provenance": {"source": "body_text", "method": "sentence_split", "sentence_index": claim_index},
-        }
-        nodes.append(claim_node)
-        node_index[claim_id] = claim_node
+    for index, reference in enumerate(bibliography, start=1):
+        reference_id = _reference_identifier(reference=reference, index=index)
+        paper_node_id = f"paper:{reference_id}"
+        reference_nodes.append(paper_node_id)
 
-        entities = _extract_entities_for_claim(extractor=extractor, claim_text=claim_text, claim_id=claim_id)
-        for entity in entities:
-            entity_id = str(entity["id"])
-            if entity_id not in node_index:
-                nodes.append(entity)
-                node_index[entity_id] = entity
-            edges.append(
-                {
-                    "source": claim_id,
-                    "target": entity_id,
-                    "relation": "mentions",
-                    "provenance": entity.get("provenance", {}),
-                }
+        graph.add_entity(
+            entity_id=paper_node_id,
+            entity_type="REFERENCE",
+            name=str(reference.get("title", "")).strip() or reference_id,
+            confidence=1.0,
+            source_documents=[reference_id],
+            attributes=_reference_attributes(reference),
+        )
+
+        for author in _author_names(reference):
+            author_node_id = f"author:{_slugify(author)}"
+            graph.add_entity(
+                entity_id=author_node_id,
+                entity_type="PERSON",
+                name=author,
+                confidence=1.0,
+                source_documents=[reference_id],
+            )
+            relation_counter = _add_sift_relation(
+                graph=graph,
+                relation_counter=relation_counter,
+                source_id=paper_node_id,
+                target_id=author_node_id,
+                relation_type="AUTHORED_BY",
+                source_document=reference_id,
+                evidence="bibliography author field",
             )
 
-        edges.extend(_extract_relations_for_claim(extractor=extractor, claim_text=claim_text, claim_id=claim_id, entities=entities))
+        venue = str(reference.get("venue", "")).strip()
+        if venue:
+            venue_node_id = f"venue:{_slugify(venue)}"
+            graph.add_entity(
+                entity_id=venue_node_id,
+                entity_type="VENUE",
+                name=venue,
+                confidence=1.0,
+                source_documents=[reference_id],
+            )
+            relation_counter = _add_sift_relation(
+                graph=graph,
+                relation_counter=relation_counter,
+                source_id=paper_node_id,
+                target_id=venue_node_id,
+                relation_type="PUBLISHED_IN",
+                source_document=reference_id,
+                evidence="bibliography venue field",
+            )
 
-        for ref_idx in _citation_indices_from_sentence(claim_text):
-            if 1 <= ref_idx <= len(bibliography):
-                ref_id = str(bibliography[ref_idx - 1].get("id", f"ref-{ref_idx:03d}"))
-                edges.append(
-                    {
-                        "source": claim_id,
-                        "target": ref_id,
-                        "relation": "supported_by",
-                        "provenance": {"source": "citation_marker", "method": "regex", "marker": f"[{ref_idx}]"},
-                    }
+    for claim_index, claim_text in enumerate(_claim_sentences(body_text), start=1):
+        claim_id = f"claim:{claim_index:03d}"
+        graph.add_entity(
+            entity_id=claim_id,
+            entity_type="CLAIM",
+            name=claim_text,
+            confidence=0.9,
+            source_documents=["body_text"],
+            attributes={"sentence_index": claim_index},
+        )
+        for marker_position, reference_idx in enumerate(_citation_indices_from_sentence(claim_text), start=1):
+            if 1 <= reference_idx <= len(reference_nodes):
+                relation_counter = _add_sift_relation(
+                    graph=graph,
+                    relation_counter=relation_counter,
+                    source_id=claim_id,
+                    target_id=reference_nodes[reference_idx - 1],
+                    relation_type="SUPPORTED_BY",
+                    source_document="body_text",
+                    evidence=f"[{reference_idx}]",
+                    relation_suffix=f"m{marker_position:02d}",
                 )
 
-    return {"nodes": nodes, "edges": edges}
+    exported = graph.export() if hasattr(graph, "export") else {}
+    return _normalize_sift_export(exported)
 
 
-def _build_spacy_kg_extractor() -> SpacyKGExtractor | None:
-    """Configure spaCy EntityRuler, Matcher, and DependencyMatcher components."""
-    try:
-        import spacy
-        from spacy.matcher import DependencyMatcher, Matcher
-    except Exception:
-        return None
-
-    try:
-        nlp = spacy.load("en_core_web_sm")
-    except Exception:
-        nlp = spacy.blank("en")
-        if "sentencizer" not in nlp.pipe_names:
-            nlp.add_pipe("sentencizer")
-
-    if "entity_ruler" in nlp.pipe_names:
-        entity_ruler = nlp.get_pipe("entity_ruler")
-    else:
-        entity_ruler = nlp.add_pipe("entity_ruler", before="ner" if "ner" in nlp.pipe_names else None)
-
-    entity_ruler.add_patterns(
-        [
-            {"label": "DOMAIN_TERM", "pattern": [{"LOWER": "knowledge"}, {"LOWER": "graph"}]},
-            {"label": "DOMAIN_TERM", "pattern": [{"LOWER": "bibliography"}]},
-            {"label": "DOMAIN_TERM", "pattern": [{"LOWER": "ontology"}]},
-            {"label": "METHOD", "pattern": [{"LOWER": "rule"}, {"LOWER": "based"}]},
-            {"label": "METHOD", "pattern": [{"LOWER": "dependency"}, {"LOWER": "matcher"}]},
-            {"label": "METHOD", "pattern": [{"LOWER": "entityruler"}]},
-            {"label": "CLAIM_VERB", "pattern": [{"LOWER": {"IN": ["supports", "improves", "uses", "causes", "reduces", "increases"]}}]},
-        ]
+def _add_sift_relation(
+    graph: object,
+    relation_counter: int,
+    source_id: str,
+    target_id: str,
+    relation_type: str,
+    source_document: str,
+    evidence: str,
+    relation_suffix: str = "",
+) -> int:
+    relation_counter += 1
+    relation_id = f"rel:{relation_counter:06d}"
+    if relation_suffix:
+        relation_id += f":{relation_suffix}"
+    graph.add_relation(
+        relation_id=relation_id,
+        source_id=source_id,
+        target_id=target_id,
+        relation_type=relation_type,
+        confidence=1.0,
+        evidence=evidence,
+        source_document=source_document,
     )
-
-    matcher = Matcher(nlp.vocab)
-    matcher.add(
-        "RELATION_VERB",
-        [[{"LOWER": {"IN": ["supports", "improves", "uses", "causes", "reduces", "increases"]}}]],
-    )
-
-    dependency_matcher: DependencyMatcher | None = None
-    has_pos = "morphologizer" in nlp.pipe_names or "tagger" in nlp.pipe_names
-    has_dep = "parser" in nlp.pipe_names
-    if has_pos and has_dep:
-        dependency_matcher = DependencyMatcher(nlp.vocab)
-        dependency_matcher.add(
-            "SUBJECT_VERB_OBJECT",
-            [
-                [
-                    {"RIGHT_ID": "verb", "RIGHT_ATTRS": {"POS": "VERB"}},
-                    {"LEFT_ID": "verb", "REL_OP": ">", "RIGHT_ID": "subject", "RIGHT_ATTRS": {"DEP": {"IN": ["nsubj", "nsubjpass"]}}},
-                    {"LEFT_ID": "verb", "REL_OP": ">", "RIGHT_ID": "object", "RIGHT_ATTRS": {"DEP": {"IN": ["dobj", "obj", "pobj"]}}},
-                ]
-            ],
-        )
-
-    return SpacyKGExtractor(
-        nlp=nlp,
-        entity_ruler=entity_ruler,
-        matcher=matcher,
-        dependency_matcher=dependency_matcher,
-    )
+    return relation_counter
 
 
-def _extract_entities_for_claim(extractor: SpacyKGExtractor | None, claim_text: str, claim_id: str) -> list[dict[str, object]]:
-    """Extract entities using EntityRuler + Matcher; produce deterministic node ids."""
-    if extractor is None:
-        return []
+def _normalize_sift_export(payload: object) -> dict[str, object]:
+    if not isinstance(payload, dict):
+        raise RuntimeError("Unexpected sift-kg export payload.")
 
-    doc = extractor.nlp(claim_text)
-    entity_map: dict[str, dict[str, object]] = {}
+    metadata = payload.get("metadata", {})
+    normalized_metadata = dict(metadata) if isinstance(metadata, dict) else {}
+    normalized_metadata["backend"] = "sift_kg"
 
-    for ent in doc.ents:
-        label = ent.text.strip()
-        if not label:
-            continue
-        entity_id = f"entity-{_slugify(label)}"
-        entity_map[entity_id] = {
-            "id": entity_id,
-            "type": "entity",
-            "label": label,
-            "category": ent.label_,
-            "provenance": {
-                "source": "body_text",
-                "method": "spacy_entityruler",
-                "rule": ent.label_,
-                "claim_id": claim_id,
-                "char_span": [ent.start_char, ent.end_char],
-            },
-        }
-
-    for _, start, end in extractor.matcher(doc):
-        span = doc[start:end]
-        label = span.text.strip()
-        if not label:
-            continue
-        entity_id = f"entity-{_slugify(label)}"
-        if entity_id in entity_map:
-            continue
-        entity_map[entity_id] = {
-            "id": entity_id,
-            "type": "entity",
-            "label": label,
-            "category": "MATCHED_TERM",
-            "provenance": {
-                "source": "body_text",
-                "method": "spacy_matcher",
-                "rule": "RELATION_VERB",
-                "claim_id": claim_id,
-                "char_span": [span.start_char, span.end_char],
-            },
-        }
-
-    return list(entity_map.values())
-
-
-def _extract_relations_for_claim(
-    extractor: SpacyKGExtractor | None,
-    claim_text: str,
-    claim_id: str,
-    entities: list[dict[str, object]],
-) -> list[dict[str, object]]:
-    """Extract deterministic relation edges using Matcher and DependencyMatcher."""
-    if extractor is None or len(entities) < 2:
-        return []
-
-    doc = extractor.nlp(claim_text)
-    sorted_entities = sorted(entities, key=lambda item: str(item.get("label", "")))
-    entity_ids = [str(item.get("id", "")) for item in sorted_entities if item.get("id")]
-    if len(entity_ids) < 2:
-        return []
-
+    nodes_raw = payload.get("nodes", [])
+    links_raw = payload.get("links", payload.get("edges", []))
+    nodes: list[dict[str, object]] = []
     edges: list[dict[str, object]] = []
 
-    for _, start, end in extractor.matcher(doc):
-        span = doc[start:end]
-        relation_label = span.text.lower()
-        edges.append(
-            {
-                "source": entity_ids[0],
-                "target": entity_ids[1],
-                "relation": relation_label,
-                "provenance": {
-                    "source": "body_text",
-                    "method": "spacy_matcher",
-                    "rule": "RELATION_VERB",
-                    "claim_id": claim_id,
-                    "char_span": [span.start_char, span.end_char],
-                },
+    if isinstance(nodes_raw, list):
+        for node in nodes_raw:
+            if not isinstance(node, dict):
+                continue
+            node_id = str(node.get("id", "")).strip()
+            if not node_id:
+                continue
+            entity_type = str(node.get("entity_type", "")).strip().upper()
+            label = str(node.get("name", node.get("label", node_id))).strip() or node_id
+            normalized: dict[str, object] = {
+                "id": node_id,
+                "type": _node_type_for_entity_type(entity_type),
+                "label": label,
+                "provenance": {"source": "sift_kg", "method": "entity_import"},
             }
+            if entity_type:
+                normalized["entity_type"] = entity_type
+            attributes = node.get("attributes", {})
+            if isinstance(attributes, dict) and attributes:
+                normalized["attributes"] = attributes
+            nodes.append(normalized)
+
+    if isinstance(links_raw, list):
+        for edge in links_raw:
+            if not isinstance(edge, dict):
+                continue
+            source = str(edge.get("source", "")).strip()
+            target = str(edge.get("target", "")).strip()
+            if not source or not target:
+                continue
+            relation = str(edge.get("relation_type", edge.get("relation", "related_to"))).strip().lower() or "related_to"
+            evidence = str(edge.get("evidence", "")).strip()
+            provenance: dict[str, object]
+            if relation == "supported_by" and evidence:
+                provenance = {"source": "citation_marker", "method": "regex", "marker": evidence}
+            else:
+                provenance = {"source": "sift_kg", "method": "relation_import"}
+            normalized_edge: dict[str, object] = {
+                "source": source,
+                "target": target,
+                "relation": relation,
+                "provenance": provenance,
+            }
+            if evidence:
+                normalized_edge["evidence"] = evidence
+            edges.append(normalized_edge)
+
+    nodes.sort(key=lambda node: (str(node.get("type", "")), str(node.get("id", ""))))
+    edges.sort(
+        key=lambda edge: (
+            str(edge.get("source", "")),
+            str(edge.get("relation", "")),
+            str(edge.get("target", "")),
+        )
+    )
+
+    return {
+        "metadata": normalized_metadata,
+        "nodes": nodes,
+        "edges": edges,
+    }
+
+
+def _build_knowledge_graph_fallback(body_text: str, bibliography: list[dict[str, object]]) -> dict[str, object]:
+    nodes: dict[str, dict[str, object]] = {}
+    edges: list[dict[str, object]] = []
+    edge_index: set[tuple[str, str, str]] = set()
+    reference_nodes: list[str] = []
+
+    for index, reference in enumerate(bibliography, start=1):
+        reference_id = _reference_identifier(reference=reference, index=index)
+        paper_node_id = f"paper:{reference_id}"
+        reference_nodes.append(paper_node_id)
+
+        _upsert_node(
+            nodes=nodes,
+            node_id=paper_node_id,
+            node_type="reference",
+            label=str(reference.get("title", "")).strip() or reference_id,
+            provenance={"source": "bibliography", "method": "import"},
+            attributes=_reference_attributes(reference),
         )
 
-    if extractor.dependency_matcher is not None:
-        for _, token_ids in extractor.dependency_matcher(doc):
-            if len(token_ids) < 3:
-                continue
-            verb = doc[token_ids[0]]
-            subject = doc[token_ids[1]]
-            obj = doc[token_ids[2]]
-            sub_id = _find_entity_id_for_token(entity_ids, sorted_entities, subject)
-            obj_id = _find_entity_id_for_token(entity_ids, sorted_entities, obj)
-            if not sub_id or not obj_id or sub_id == obj_id:
-                continue
-            edges.append(
-                {
-                    "source": sub_id,
-                    "target": obj_id,
-                    "relation": verb.lemma_.lower() or verb.text.lower(),
-                    "provenance": {
-                        "source": "body_text",
-                        "method": "spacy_dependency_matcher",
-                        "rule": "SUBJECT_VERB_OBJECT",
-                        "claim_id": claim_id,
-                        "token_ids": token_ids,
-                    },
-                }
+        for author in _author_names(reference):
+            author_node_id = f"author:{_slugify(author)}"
+            _upsert_node(
+                nodes=nodes,
+                node_id=author_node_id,
+                node_type="entity",
+                label=author,
+                provenance={"source": "bibliography", "method": "author_parse"},
+            )
+            _append_edge(
+                edges=edges,
+                edge_index=edge_index,
+                source=paper_node_id,
+                target=author_node_id,
+                relation="authored_by",
+                provenance={"source": "bibliography", "method": "author_parse"},
             )
 
-    for edge in edges:
-        edge.setdefault("context", claim_text)
+        venue = str(reference.get("venue", "")).strip()
+        if venue:
+            venue_node_id = f"venue:{_slugify(venue)}"
+            _upsert_node(
+                nodes=nodes,
+                node_id=venue_node_id,
+                node_type="entity",
+                label=venue,
+                provenance={"source": "bibliography", "method": "venue_parse"},
+            )
+            _append_edge(
+                edges=edges,
+                edge_index=edge_index,
+                source=paper_node_id,
+                target=venue_node_id,
+                relation="published_in",
+                provenance={"source": "bibliography", "method": "venue_parse"},
+            )
 
-    return edges
+    for claim_index, claim_text in enumerate(_claim_sentences(body_text), start=1):
+        claim_id = f"claim:{claim_index:03d}"
+        _upsert_node(
+            nodes=nodes,
+            node_id=claim_id,
+            node_type="claim",
+            label=claim_text,
+            provenance={"source": "body_text", "method": "sentence_split", "sentence_index": claim_index},
+        )
+        for reference_idx in _citation_indices_from_sentence(claim_text):
+            if 1 <= reference_idx <= len(reference_nodes):
+                marker = f"[{reference_idx}]"
+                _append_edge(
+                    edges=edges,
+                    edge_index=edge_index,
+                    source=claim_id,
+                    target=reference_nodes[reference_idx - 1],
+                    relation="supported_by",
+                    provenance={"source": "citation_marker", "method": "regex", "marker": marker},
+                    evidence=marker,
+                )
+
+    normalized_nodes = sorted(nodes.values(), key=lambda node: (str(node.get("type", "")), str(node.get("id", ""))))
+    normalized_edges = sorted(
+        edges,
+        key=lambda edge: (
+            str(edge.get("source", "")),
+            str(edge.get("relation", "")),
+            str(edge.get("target", "")),
+        ),
+    )
+    return {
+        "metadata": {"backend": "fallback"},
+        "nodes": normalized_nodes,
+        "edges": normalized_edges,
+    }
 
 
-def _find_entity_id_for_token(entity_ids: list[str], entities: list[dict[str, object]], token: object) -> str:
-    token_text = getattr(token, "text", "").lower().strip()
-    for idx, entity in enumerate(entities):
-        label = str(entity.get("label", "")).lower()
-        if token_text and token_text in label:
-            return entity_ids[idx]
-    return ""
+def _upsert_node(
+    nodes: dict[str, dict[str, object]],
+    node_id: str,
+    node_type: str,
+    label: str,
+    provenance: dict[str, object],
+    attributes: dict[str, object] | None = None,
+) -> None:
+    if node_id in nodes:
+        return
+    node: dict[str, object] = {
+        "id": node_id,
+        "type": node_type,
+        "label": label,
+        "provenance": provenance,
+    }
+    if attributes:
+        node["attributes"] = attributes
+    nodes[node_id] = node
+
+
+def _append_edge(
+    edges: list[dict[str, object]],
+    edge_index: set[tuple[str, str, str]],
+    source: str,
+    target: str,
+    relation: str,
+    provenance: dict[str, object],
+    evidence: str = "",
+) -> None:
+    edge_key = (source, relation, target)
+    if edge_key in edge_index:
+        return
+    edge_index.add(edge_key)
+    payload: dict[str, object] = {
+        "source": source,
+        "target": target,
+        "relation": relation,
+        "provenance": provenance,
+    }
+    if evidence:
+        payload["evidence"] = evidence
+    edges.append(payload)
+
+
+def _reference_identifier(reference: dict[str, object], index: int) -> str:
+    raw_id = str(reference.get("id", "")).strip()
+    return raw_id or f"ref-{index:03d}"
+
+
+def _reference_attributes(reference: dict[str, object]) -> dict[str, object]:
+    attributes: dict[str, object] = {}
+    for key in ("year", "venue", "doi", "url", "openalex_id"):
+        value = reference.get(key)
+        if value is None:
+            continue
+        text = str(value).strip()
+        if text:
+            attributes[key] = text
+    return attributes
+
+
+def _author_names(reference: dict[str, object]) -> list[str]:
+    value = reference.get("authors", [])
+    if isinstance(value, list):
+        return [str(author).strip() for author in value if str(author).strip()]
+    if isinstance(value, str):
+        return [chunk.strip() for chunk in re.split(r";| and |,", value) if chunk.strip()]
+    return []
+
+
+def _node_type_for_entity_type(entity_type: str) -> str:
+    if entity_type == "CLAIM":
+        return "claim"
+    if entity_type == "REFERENCE":
+        return "reference"
+    return "entity"
+
+
+def _claim_sentences(body_text: str, max_claims: int = 40) -> list[str]:
+    sentences = [chunk.strip() for chunk in re.split(r"(?<=[.!?])\s+", body_text) if chunk.strip()]
+    return [sentence for sentence in sentences if len(sentence.split()) >= 8][:max_claims]
+
 
 def _citation_indices_from_sentence(sentence: str) -> list[int]:
     indices: list[int] = []
@@ -455,9 +666,11 @@ def _citation_indices_from_sentence(sentence: str) -> list[int]:
             continue
     return indices
 
+
 def _slugify(value: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
     return slug or "unknown"
+
 
 def build_outline(body_text: str, fallback_title: str) -> dict[str, object]:
     """Create a simple article outline object."""

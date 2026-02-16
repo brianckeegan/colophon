@@ -54,7 +54,8 @@ Generate a manuscript from deconstructed artifacts
 Notes
 -----
 
-- PDF extraction uses PyMuPDF.
+- PDF extraction uses ``kreuzberg`` first, with PyMuPDF as a fallback backend.
+- Knowledge-graph construction in ``deconstruct`` uses ``sift-kg`` with a deterministic local fallback.
 - Bibliography enrichment is best-effort via OpenAlex. When lookups fail, Colophon
   preserves parsed citation data and still emits all artifacts.
 
